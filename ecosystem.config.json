@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "cache-service",
+      "name": "manifesto-service",
       "script": "src/index.js",
       "instances": 1,
       "autorestart": true,
