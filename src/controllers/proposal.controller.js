@@ -1,11 +1,13 @@
 const catchAsync = require('../shared/utils/catchAsync');
 const { proposalService } = require('../services');
 
-const helloWorld = catchAsync(async (req, res) => {
-  const result = await proposalService.helloWorld();
+const createDraft = catchAsync(async (req, res) => {
+  const proposalDraft = req.body;
+  const { space, member } = req;
+  const result = await proposalService.createDraft(space, member, proposalDraft);
   res.send(result);
 });
 
 module.exports = {
-  helloWorld,
+  createDraft,
 };

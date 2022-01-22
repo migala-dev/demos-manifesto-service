@@ -1,13 +1,36 @@
+const ProposalRepository = require('../shared/repositories/proposal.repository');
+const ManifestoRepository = require('../shared/repositories/manifesto.repository');
+const ManifestoOptionRepository = require('../shared/repositories/manifesto-option.repository');
+const Manifesto = require('../shared/models/manifesto.model');
+const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
+const ManifestoOption = require('../shared/models/manifesto-option.model');
+const Proposal = require('../shared/models/proposal.model');
+const { number } = require('joi');
 
 /**
- * Hello World!!
- * @returns {Promise<{ message: string }}>}
+ * Create a draft
+ * @param {Space} space
+ * @param {Member} member
+ * @param {Proposal} proposalCraft
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
  */
-const helloWorld = async () => {
+const createDraft = async (space, member, proposalDraft) => {
+  const { userId } = member;
+  const { spaceId } = space;
+  
+  const manifesto = await ManifestoRepository.createManifesto(proposalDraft, spaceId, userId);
 
-  return { message: 'Hello World!! From ProposalService.' };
+  let manifestoOptions = [];
+  const { options } = proposalDraft;
+  if (proposalDraft.optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0) {
+    manifestoOptions = await ManifestoOptionRepository.createOptions(options, manifesto.manifestoId, userId);
+  }
+
+  const proposal = await ProposalRepository.createProposal(manifesto.manifestoId, proposalStatusEnum.DRAFT, spaceId, userId);
+
+  return { manifesto, manifestoOptions, proposal };
 };
 
 module.exports = {
-  helloWorld,
+  createDraft,
 };

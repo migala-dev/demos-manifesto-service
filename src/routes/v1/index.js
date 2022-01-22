@@ -7,7 +7,7 @@ const router = express.Router();
 
 const defaultRoutes = [
   {
-    path: '/proposal',
+    path: '/proposals',
     route: proposalRoute,
   },
 ];
