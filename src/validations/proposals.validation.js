@@ -15,6 +15,22 @@ const createDraft = {
   }),
 };
 
+const updateDraft = {
+  body: Joi.object().keys({
+    title: Joi.string().allow(null, ''),
+    content: Joi.string().allow(null, ''),
+    optionType: Joi.number().valid(...Object.values(optionTypeEnum)),
+    options: Joi.array()
+    .items(
+        Joi.object().keys({
+            manifestoOptionId: Joi.string().allow(null, ''),
+            title: Joi.string().allow(null, ''),
+        })
+      )
+  }),
+};
+
 module.exports = {
     createDraft,
+    updateDraft,
 };

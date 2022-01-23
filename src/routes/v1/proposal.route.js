@@ -6,8 +6,10 @@ const router = express.Router();
 const validations = require('../../validations/proposals.validation');
 const { spaceRoleEnum } = require('../../shared/enums');
 const spaceRole = require('../../shared/middlewares/space-role.middleware');
+const proposal = require('../../shared/middlewares/proposal.middleware');
 
 router.post('/:spaceId/draft', auth(), validate(validations.createDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE),  proposalController.createDraft);
+router.put('/:spaceId/draft/:proposalId', auth(), validate(validations.updateDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE), proposal, proposalController.updateDraft);
 
 module.exports = router;
 

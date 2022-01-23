@@ -17,7 +17,7 @@ const { number } = require('joi');
 const createDraft = async (space, member, proposalDraft) => {
   const { userId } = member;
   const { spaceId } = space;
-  
+
   const manifesto = await ManifestoRepository.createManifesto(proposalDraft, spaceId, userId);
 
   let manifestoOptions = [];
@@ -31,6 +31,31 @@ const createDraft = async (space, member, proposalDraft) => {
   return { manifesto, manifestoOptions, proposal };
 };
 
+/**
+ * Update a draft proposal
+ * @param {Space} space
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @param {Proposal} proposalCraft
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ */
+const updateDraft = async (proposal, member, proposalDraft) => {
+  const { manifestoId } = proposal;
+  const { userId } = member;
+
+  const manifesto = await ManifestoRepository.updateManifesto(manifestoId, proposalDraft, userId);
+
+  let manifestoOptions = [];
+  const { options } = proposalDraft;
+  if (proposalDraft.optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0) {
+    manifestoOptions = await ManifestoOptionRepository.updateOrCreateOptions(options, manifestoId, userId);
+    await ManifestoOptionRepository.removeAllMissingOptions(manifestoOptions, manifestoId);
+  }
+
+  return { manifesto, manifestoOptions, proposal };
+};
+
 module.exports = {
   createDraft,
+  updateDraft,
 };
