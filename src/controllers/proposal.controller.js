@@ -15,7 +15,15 @@ const updateDraft = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const updateAndPublishDraft = catchAsync(async (req, res) => {
+  const proposalDraft = req.body;
+  const { proposal, member } = req;
+  const result = await proposalService.updateAndPublishDraft(proposal, member, proposalDraft);
+  res.send(result);
+});
+
 module.exports = {
   createDraft,
   updateDraft,
+  updateAndPublishDraft,
 };

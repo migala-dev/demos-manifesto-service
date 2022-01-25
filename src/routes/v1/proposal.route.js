@@ -10,6 +10,7 @@ const proposal = require('../../shared/middlewares/proposal.middleware');
 
 router.post('/:spaceId/draft', auth(), validate(validations.createDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE),  proposalController.createDraft);
 router.put('/:spaceId/draft/:proposalId', auth(), validate(validations.updateDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE), proposal, proposalController.updateDraft);
+router.put('/:spaceId/draft/:proposalId/publish', auth(), validate(validations.updateDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE), proposal, proposalController.updateAndPublishDraft);
 
 module.exports = router;
 

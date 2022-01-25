@@ -6,6 +6,7 @@ const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
 const ManifestoOption = require('../shared/models/manifesto-option.model');
 const Proposal = require('../shared/models/proposal.model');
 const { number } = require('joi');
+const proposalNotification = require('../shared/notifications/proposals.notification');
 
 /**
  * Create a draft
@@ -55,7 +56,27 @@ const updateDraft = async (proposal, member, proposalDraft) => {
   return { manifesto, manifestoOptions, proposal };
 };
 
+/**
+ * Update a draft proposal
+ * @param {Space} space
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @param {Proposal} proposalCraft
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ */
+const updateAndPublishDraft =  async (proposal, member, proposalDraft) => {
+  const { proposalId, spaceId } = proposal;
+  const { manifesto, manifestoOptions } = updateDraft(proposal, member, proposalDraft);
+
+  const proposalUpdated = ProposalRepository.updateProposal(proposal.proposalId, proposalStatusEnum.OPEN, member.userId);
+
+  proposalNotification.proposalPublished(spaceId, proposalId);
+
+  return { manifesto, manifestoOptions, proposal: proposalUpdated };
+}
+
 module.exports = {
   createDraft,
   updateDraft,
+  updateAndPublishDraft
 };
