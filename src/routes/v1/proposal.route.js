@@ -7,10 +7,13 @@ const validations = require('../../validations/proposals.validation');
 const { spaceRoleEnum } = require('../../shared/enums');
 const spaceRole = require('../../shared/middlewares/space-role.middleware');
 const proposal = require('../../shared/middlewares/proposal.middleware');
+const spaceMember = require('../../shared/middlewares/space-member.middleware');
 
+router.get('/:spaceId/:proposalId', auth(), spaceMember, proposal,  proposalController.getProposal);
 router.post('/:spaceId/draft', auth(), validate(validations.createDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE),  proposalController.createDraft);
 router.put('/:spaceId/draft/:proposalId', auth(), validate(validations.updateDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE), proposal, proposalController.updateDraft);
 router.put('/:spaceId/draft/:proposalId/publish', auth(), validate(validations.updateDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE), proposal, proposalController.updateAndPublishDraft);
+router.post('/:spaceId/publish', auth(), validate(validations.createDraft), spaceRole(spaceRoleEnum.REPRESENTATIVE), proposalController.createAndPublishProposal);
 
 module.exports = router;
 

@@ -8,6 +8,8 @@ const Proposal = require('../shared/models/proposal.model');
 const { number } = require('joi');
 const proposalNotification = require('../shared/notifications/proposals.notification');
 
+const canCreateOptions = (optionType, options) => optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
+
 /**
  * Create a draft
  * @param {Space} space
@@ -22,8 +24,8 @@ const createDraft = async (space, member, proposalDraft) => {
   const manifesto = await ManifestoRepository.createManifesto(proposalDraft, spaceId, userId);
 
   let manifestoOptions = [];
-  const { options } = proposalDraft;
-  if (proposalDraft.optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0) {
+  const { options, optionType } = proposalDraft;
+  if (canCreateOptions(optionType, options)) {
     manifestoOptions = await ManifestoOptionRepository.createOptions(options, manifesto.manifestoId, userId);
   }
 
@@ -34,7 +36,6 @@ const createDraft = async (space, member, proposalDraft) => {
 
 /**
  * Update a draft proposal
- * @param {Space} space
  * @param {Proposal} proposal
  * @param {Member} member
  * @param {Proposal} proposalCraft
@@ -58,7 +59,6 @@ const updateDraft = async (proposal, member, proposalDraft) => {
 
 /**
  * Update a draft proposal
- * @param {Space} space
  * @param {Proposal} proposal
  * @param {Member} member
  * @param {Proposal} proposalCraft
@@ -66,17 +66,61 @@ const updateDraft = async (proposal, member, proposalDraft) => {
  */
 const updateAndPublishDraft =  async (proposal, member, proposalDraft) => {
   const { proposalId, spaceId } = proposal;
-  const { manifesto, manifestoOptions } = updateDraft(proposal, member, proposalDraft);
+  const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalDraft);
 
-  const proposalUpdated = ProposalRepository.updateProposal(proposal.proposalId, proposalStatusEnum.OPEN, member.userId);
+  const proposalUpdated = await ProposalRepository.updateProposal(proposal.proposalId, proposalStatusEnum.OPEN, member.userId);
 
   proposalNotification.proposalPublished(spaceId, proposalId);
 
   return { manifesto, manifestoOptions, proposal: proposalUpdated };
 }
 
+/**
+ * Get a proposal with the manifesto and the manifesto options
+ * @param {Proposal} proposal
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ */
+const getProposal =  async (proposal) => {
+  const { manifestoId } = proposal;
+  
+  const manifesto = await ManifestoRepository.findById(manifestoId);
+  
+  const manifestoOptions = await ManifestoOptionRepository.findAllByManifestoId(manifestoId);
+
+  return { manifesto, manifestoOptions, proposal };
+}
+
+
+/**
+ * Update a draft proposal
+ * @param {Proposal} proposal
+ * @param {Space} space
+ * @param {Member} member
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ */
+ const createAndPublishProposal =  async (proposal, space, member) => {
+   const { spaceId } = space;
+   const { userId } = member;
+
+  const manifesto = await ManifestoRepository.createManifesto(proposal, spaceId, userId);
+
+  let manifestoOptions = [];
+  const { options, optionType } = proposal;
+  if (canCreateOptions(optionType, options)) {
+    manifestoOptions = await ManifestoOptionRepository.createOptions(options, manifesto.manifestoId, userId);
+  }
+
+  const proposalCreated = await ProposalRepository.createProposal(manifesto.manifestoId, proposalStatusEnum.OPEN, spaceId, userId);
+
+  proposalNotification.proposalPublished(spaceId, proposalCreated.proposalId);
+
+  return { manifesto, manifestoOptions, proposal: proposalCreated };
+}
+
 module.exports = {
   createDraft,
   updateDraft,
-  updateAndPublishDraft
+  updateAndPublishDraft,
+  getProposal,
+  createAndPublishProposal
 };
