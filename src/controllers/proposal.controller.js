@@ -35,11 +35,18 @@ const createAndPublishProposal = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const cancelProposal = catchAsync(async (req, res) => {
+  const { proposal, member } = req;
+  const result = await proposalService.cancelProposal(proposal, member);
+  res.send(result);
+});
+
 
 module.exports = {
   createDraft,
   updateDraft,
   updateAndPublishDraft,
   getProposal,
-  createAndPublishProposal
+  createAndPublishProposal,
+  cancelProposal
 };

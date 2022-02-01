@@ -8,7 +8,8 @@ const Proposal = require('../shared/models/proposal.model');
 const { number } = require('joi');
 const proposalNotification = require('../shared/notifications/proposals.notification');
 
-const canCreateOptions = (optionType, options) => optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
+const canCreateOptions = (optionType, options) =>
+  optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
 
 /**
  * Create a draft
@@ -64,43 +65,46 @@ const updateDraft = async (proposal, member, proposalDraft) => {
  * @param {Proposal} proposalCraft
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
  */
-const updateAndPublishDraft =  async (proposal, member, proposalDraft) => {
+const updateAndPublishDraft = async (proposal, member, proposalDraft) => {
   const { proposalId, spaceId } = proposal;
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalDraft);
 
-  const proposalUpdated = await ProposalRepository.updateProposal(proposal.proposalId, proposalStatusEnum.OPEN, member.userId);
+  const proposalUpdated = await ProposalRepository.updateProposal(
+    proposal.proposalId,
+    proposalStatusEnum.OPEN,
+    member.userId
+  );
 
-  proposalNotification.proposalPublished(spaceId, proposalId);
+  proposalNotification.proposalUpdated(spaceId, proposalId);
 
   return { manifesto, manifestoOptions, proposal: proposalUpdated };
-}
+};
 
 /**
  * Get a proposal with the manifesto and the manifesto options
  * @param {Proposal} proposal
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
  */
-const getProposal =  async (proposal) => {
+const getProposal = async (proposal) => {
   const { manifestoId } = proposal;
-  
+
   const manifesto = await ManifestoRepository.findById(manifestoId);
-  
+
   const manifestoOptions = await ManifestoOptionRepository.findAllByManifestoId(manifestoId);
 
   return { manifesto, manifestoOptions, proposal };
-}
-
+};
 
 /**
- * Update a draft proposal
+ * Create and publish a proposal
  * @param {Proposal} proposal
  * @param {Space} space
  * @param {Member} member
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
  */
- const createAndPublishProposal =  async (proposal, space, member) => {
-   const { spaceId } = space;
-   const { userId } = member;
+const createAndPublishProposal = async (proposal, space, member) => {
+  const { spaceId } = space;
+  const { userId } = member;
 
   const manifesto = await ManifestoRepository.createManifesto(proposal, spaceId, userId);
 
@@ -110,17 +114,40 @@ const getProposal =  async (proposal) => {
     manifestoOptions = await ManifestoOptionRepository.createOptions(options, manifesto.manifestoId, userId);
   }
 
-  const proposalCreated = await ProposalRepository.createProposal(manifesto.manifestoId, proposalStatusEnum.OPEN, spaceId, userId);
+  const proposalCreated = await ProposalRepository.createProposal(
+    manifesto.manifestoId,
+    proposalStatusEnum.OPEN,
+    spaceId,
+    userId
+  );
 
-  proposalNotification.proposalPublished(spaceId, proposalCreated.proposalId);
+  proposalNotification.proposalUpdated(spaceId, proposalCreated.proposalId);
 
   return { manifesto, manifestoOptions, proposal: proposalCreated };
-}
+};
+
+/**
+ * Cancel a Proposal
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @returns {Promise<Proposal}>}
+ */
+const cancelProposal = async (proposal, member) => {
+  const { proposalId, spaceId } = proposal;
+  const { userId } = member;
+
+  const proposalCancelled = await ProposalRepository.updateProposal(proposalId, proposalStatusEnum.CANCELLED, userId);
+
+  proposalNotification.proposalUpdated(spaceId, proposalId);
+
+  return { proposal: proposalCancelled };
+};
 
 module.exports = {
   createDraft,
   updateDraft,
   updateAndPublishDraft,
   getProposal,
-  createAndPublishProposal
+  createAndPublishProposal,
+  cancelProposal,
 };
