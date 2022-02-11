@@ -26,6 +26,13 @@ router.put(
   proposalStatus(proposalStatusEnum.DRAFT),
   proposalController.updateDraft
 );
+router.delete(
+  '/:spaceId/draft/:proposalId',
+  auth(),
+  spaceRoles(spaceRoleEnum.REPRESENTATIVE),
+  proposalStatus(proposalStatusEnum.DRAFT),
+  proposalController.deleteDraft
+);
 router.put(
   '/:spaceId/draft/:proposalId/publish',
   auth(),

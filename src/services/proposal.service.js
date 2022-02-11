@@ -143,9 +143,25 @@ const cancelProposal = async (proposal, member) => {
   return { proposal: proposalCancelled };
 };
 
+/**
+ * Delete a Proposal draft
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @returns {Promise<Proposal}>}
+ */
+const deleteDraft = async (proposal, member) => {
+  const { proposalId } = proposal;
+  const { userId } = member;
+
+  const proposalDeleted = await ProposalRepository.updateProposal(proposalId, proposalStatusEnum.DELETED, userId);
+
+  return { proposal: proposalDeleted };
+};
+
 module.exports = {
   createDraft,
   updateDraft,
+  deleteDraft,
   updateAndPublishDraft,
   getProposal,
   createAndPublishProposal,

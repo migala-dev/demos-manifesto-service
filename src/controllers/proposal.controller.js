@@ -15,12 +15,20 @@ const updateDraft = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const deleteDraft = catchAsync(async (req, res) => {
+  const { proposal, member } = req;
+  const result = await proposalService.deleteDraft(proposal, member);
+  res.send(result);
+});
+
 const updateAndPublishDraft = catchAsync(async (req, res) => {
   const proposalDraft = req.body;
   const { proposal, member } = req;
   const result = await proposalService.updateAndPublishDraft(proposal, member, proposalDraft);
   res.send(result);
 });
+
+
 
 const getProposal = catchAsync(async (req, res) => {
   const { proposal } = req;
@@ -45,6 +53,7 @@ const cancelProposal = catchAsync(async (req, res) => {
 module.exports = {
   createDraft,
   updateDraft,
+  deleteDraft,
   updateAndPublishDraft,
   getProposal,
   createAndPublishProposal,
