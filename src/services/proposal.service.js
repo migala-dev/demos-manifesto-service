@@ -81,6 +81,28 @@ const updateAndPublishDraft = async (proposal, member, proposalDraft) => {
 };
 
 /**
+ * Update an open proposal
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @param {Proposal} proposalInfo
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ */
+const updateProposal = async (proposal, member, proposalInfo) => {
+  const { proposalId, spaceId } = proposal;
+  const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalInfo);
+
+  const proposalUpdated = await ProposalRepository.updateProposal(
+    proposal.proposalId,
+    proposalStatusEnum.OPEN,
+    member.userId
+  );
+
+  proposalNotification.proposalUpdated(spaceId, proposalId);
+
+  return { manifesto, manifestoOptions, proposal: proposalUpdated };
+};
+
+/**
  * Get a proposal with the manifesto and the manifesto options
  * @param {Proposal} proposal
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
@@ -166,4 +188,5 @@ module.exports = {
   getProposal,
   createAndPublishProposal,
   cancelProposal,
+  updateProposal
 };

@@ -30,6 +30,20 @@ const updateDraft = {
   }),
 };
 
+const proposal = {
+  body: Joi.object().keys({
+    title: Joi.string().required(),
+    content: Joi.string().allow(null, ''),
+    optionType: Joi.number().valid(...Object.values(optionTypeEnum)),
+    options: Joi.array()
+    .items(
+        Joi.object().keys({
+            title: Joi.string().required(),
+        })
+      )
+  }),
+};
+
 module.exports = {
     createDraft,
     updateDraft,

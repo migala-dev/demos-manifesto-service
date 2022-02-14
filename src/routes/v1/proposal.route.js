@@ -44,9 +44,17 @@ router.put(
 router.post(
   '/:spaceId/publish',
   auth(),
-  validate(validations.createDraft),
+  validate(validations.proposal),
   spaceRoles(spaceRoleEnum.REPRESENTATIVE),
   proposalController.createAndPublishProposal
+);
+router.put(
+  '/:spaceId/:proposalId',
+  auth(),
+  validate(validations.proposal),
+  spaceRoles(spaceRoleEnum.REPRESENTATIVE),
+  proposalStatus(proposalStatusEnum.OPEN),
+  proposalController.updateProposal
 );
 router.put(
   '/:spaceId/:proposalId/cancel',

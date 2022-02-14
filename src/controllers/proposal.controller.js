@@ -28,7 +28,12 @@ const updateAndPublishDraft = catchAsync(async (req, res) => {
   res.send(result);
 });
 
-
+const updateProposal = catchAsync(async (req, res) => {
+  const proposalInfo = req.body;
+  const { proposal, member } = req;
+  const result = await proposalService.updateProposal(proposal, member, proposalInfo);
+  res.send(result);
+});
 
 const getProposal = catchAsync(async (req, res) => {
   const { proposal } = req;
@@ -57,5 +62,6 @@ module.exports = {
   updateAndPublishDraft,
   getProposal,
   createAndPublishProposal,
-  cancelProposal
+  cancelProposal,
+  updateProposal
 };
