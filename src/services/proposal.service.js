@@ -1,6 +1,10 @@
+const httpStatus = require('http-status');
+const ApiError = require('../shared/utils/ApiError');
 const ProposalRepository = require('../shared/repositories/proposal.repository');
 const ManifestoRepository = require('../shared/repositories/manifesto.repository');
 const ManifestoOptionRepository = require('../shared/repositories/manifesto-option.repository');
+const ProposalParticipationRepository = require('../shared/repositories/proposal-participation.repository');
+const ProposalVoteRepository = require('../shared/repositories/proposal-vote.repository');
 const Manifesto = require('../shared/models/manifesto.model');
 const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
 const ManifestoOption = require('../shared/models/manifesto-option.model');
@@ -180,6 +184,39 @@ const deleteDraft = async (proposal, member) => {
   return { proposal: proposalDeleted };
 };
 
+/**
+ * Vote a Proposal
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @param {Object} voteInfo
+ * @returns {Promise<{ proposalParticipation: ProposalParticipation }}>}
+ */
+const voteProposal = async (proposal, member, voteInfo) => {
+  const { proposalId, manifestoId } = proposal;
+  const { userId, memberId } = member;
+  const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
+  const manifesto = await ManifestoRepository.findById(manifestoId);
+
+  let participation = await ProposalParticipationRepository.findByProposalIdAndUserId(proposalId, userId);
+  if(participation === undefined) {
+    participation = await ProposalParticipationRepository.createProposalParticipation(proposalId, userId, memberId);
+
+    await ProposalVoteRepository.createProposalVote(proposalId, userHash, manifestoOptionId, inFavor, nullVoteComment);
+
+    proposalNotification.proposalVoteCreated(spaceId, participation.proposalParticipationId);
+
+  } else {
+    const oldVote = await ProposalVoteRepository.findByUserHash(userHash);
+    if (oldVote !== undefined) {
+      await ProposalVoteRepository.updateProposalVote(oldVote.proposalVoteId, manifestoOptionId, inFavor, nullVoteComment);
+    } else {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'It is not posible to update this vote.');
+    }
+  }
+  
+  return { proposalParticipation: participation }
+};
+
 module.exports = {
   createDraft,
   updateDraft,
@@ -188,5 +225,6 @@ module.exports = {
   getProposal,
   createAndPublishProposal,
   cancelProposal,
-  updateProposal
+  updateProposal,
+  voteProposal,
 };

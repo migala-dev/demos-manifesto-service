@@ -63,6 +63,14 @@ router.put(
   proposalStatus(proposalStatusEnum.OPEN),
   proposalController.cancelProposal
 );
+router.put(
+  '/:spaceId/:proposalId/vote',
+  auth(),
+  validate(validations.voteProposal),
+  spaceMember,
+  proposalStatus(proposalStatusEnum.OPEN),
+  proposalController.voteProposal
+);
 
 module.exports = router;
 

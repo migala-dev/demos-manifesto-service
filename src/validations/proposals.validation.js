@@ -44,7 +44,18 @@ const proposal = {
   }),
 };
 
+const voteProposal = {
+  body: Joi.object().keys({
+    inFavor: Joi.boolean().allow(null),
+    manifestoOption: Joi.string().allow(null, ''),
+    userHash: Joi.string().required(),
+    nullVoteComment: Joi.string().allow(null, ''),
+  }),
+};
+
+
 module.exports = {
     createDraft,
     updateDraft,
+    voteProposal
 };
