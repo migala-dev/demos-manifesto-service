@@ -192,7 +192,7 @@ const deleteDraft = async (proposal, member) => {
  * @returns {Promise<{ proposalParticipation: ProposalParticipation }}>}
  */
 const voteProposal = async (proposal, member, voteInfo) => {
-  const { proposalId, manifestoId } = proposal;
+  const { proposalId, spaceId, manifestoId } = proposal;
   const { userId, memberId } = member;
   const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
   const manifesto = await ManifestoRepository.findById(manifestoId);

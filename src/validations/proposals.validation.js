@@ -9,6 +9,7 @@ const createDraft = {
     options: Joi.array()
     .items(
         Joi.object().keys({
+            manifestoOptionId: Joi.string().allow(null, ''),
             title: Joi.string().allow(null, ''),
         })
       )
@@ -47,7 +48,7 @@ const proposal = {
 const voteProposal = {
   body: Joi.object().keys({
     inFavor: Joi.boolean().allow(null),
-    manifestoOption: Joi.string().allow(null, ''),
+    manifestoOptionId: Joi.string().allow(null, ''),
     userHash: Joi.string().required(),
     nullVoteComment: Joi.string().allow(null, ''),
   }),
