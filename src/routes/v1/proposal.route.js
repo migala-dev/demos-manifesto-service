@@ -71,6 +71,13 @@ router.put(
   proposalStatus(proposalStatusEnum.OPEN),
   proposalController.voteProposal
 );
+router.get(
+  '/:spaceId/participation/:participationId',
+  auth(),
+  spaceMember,
+  proposalController.getProposalParticipation
+);
+
 
 module.exports = router;
 

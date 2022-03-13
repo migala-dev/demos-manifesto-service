@@ -4,13 +4,14 @@ const ProposalRepository = require('../shared/repositories/proposal.repository')
 const ManifestoRepository = require('../shared/repositories/manifesto.repository');
 const ManifestoOptionRepository = require('../shared/repositories/manifesto-option.repository');
 const ProposalParticipationRepository = require('../shared/repositories/proposal-participation.repository');
+const MemberRepository = require('../shared/repositories/member.repository');
 const ProposalVoteRepository = require('../shared/repositories/proposal-vote.repository');
 const Manifesto = require('../shared/models/manifesto.model');
 const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
 const ManifestoOption = require('../shared/models/manifesto-option.model');
 const Proposal = require('../shared/models/proposal.model');
-const { number } = require('joi');
 const proposalNotification = require('../shared/notifications/proposals.notification');
+const ProposalParticipation = require('../shared/models/proposal-participation.model');
 
 const canCreateOptions = (optionType, options) =>
   optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
@@ -63,7 +64,7 @@ const updateDraft = async (proposal, member, proposalDraft) => {
 };
 
 /**
- * Update a draft proposal
+ * Update a draft and publish proposal
  * @param {Proposal} proposal
  * @param {Member} member
  * @param {Proposal} proposalCraft
@@ -79,9 +80,11 @@ const updateAndPublishDraft = async (proposal, member, proposalDraft) => {
     member.userId
   );
 
-  proposalNotification.proposalUpdated(spaceId, proposalId);
+  const participations = await createProposalParticipations(spaceId, proposalId);
 
-  return { manifesto, manifestoOptions, proposal: proposalUpdated };
+  proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
+
+  return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
 };
 
 /**
@@ -101,7 +104,7 @@ const updateProposal = async (proposal, member, proposalInfo) => {
     member.userId
   );
 
-  proposalNotification.proposalUpdated(spaceId, proposalId);
+  proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
 
   return { manifesto, manifestoOptions, proposal: proposalUpdated };
 };
@@ -109,16 +112,18 @@ const updateProposal = async (proposal, member, proposalInfo) => {
 /**
  * Get a proposal with the manifesto and the manifesto options
  * @param {Proposal} proposal
- * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal, participations: ProposalParticipation[] }}>}
  */
 const getProposal = async (proposal) => {
-  const { manifestoId } = proposal;
+  const { manifestoId, proposalId } = proposal;
 
   const manifesto = await ManifestoRepository.findById(manifestoId);
 
   const manifestoOptions = await ManifestoOptionRepository.findAllByManifestoId(manifestoId);
 
-  return { manifesto, manifestoOptions, proposal };
+  const participations = await ProposalParticipationRepository.findByProposalId(proposalId);
+
+  return { manifesto, manifestoOptions, proposal, participations };
 };
 
 /**
@@ -126,7 +131,7 @@ const getProposal = async (proposal) => {
  * @param {Proposal} proposal
  * @param {Space} space
  * @param {Member} member
- * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
+ * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal, participations: ProposalParticipation[] }}>}
  */
 const createAndPublishProposal = async (proposal, space, member) => {
   const { spaceId } = space;
@@ -147,9 +152,20 @@ const createAndPublishProposal = async (proposal, space, member) => {
     userId
   );
 
-  proposalNotification.proposalUpdated(spaceId, proposalCreated.proposalId);
+  const participations = await createProposalParticipations(spaceId, proposalCreated.proposalId);
 
-  return { manifesto, manifestoOptions, proposal: proposalCreated };
+  proposalNotification.proposalUpdated(spaceId, proposalCreated.proposalId, userId);
+
+  return { manifesto, manifestoOptions, proposal: proposalCreated, participations };
+};
+
+const createProposalParticipations = async (spaceId, proposalId) => {
+  const members = await MemberRepository.findBySpaceIdAndInvitationStatusAccepted(spaceId);
+  return Promise.all(
+    members.map(({ memberId, userId }) =>
+      ProposalParticipationRepository.createProposalParticipation(proposalId, userId, memberId)
+    )
+  );
 };
 
 /**
@@ -164,7 +180,7 @@ const cancelProposal = async (proposal, member) => {
 
   const proposalCancelled = await ProposalRepository.updateProposal(proposalId, proposalStatusEnum.CANCELLED, userId);
 
-  proposalNotification.proposalUpdated(spaceId, proposalId);
+  proposalNotification.proposalUpdated(spaceId, proposalId, userId);
 
   return { proposal: proposalCancelled };
 };
@@ -192,29 +208,52 @@ const deleteDraft = async (proposal, member) => {
  * @returns {Promise<{ proposalParticipation: ProposalParticipation }}>}
  */
 const voteProposal = async (proposal, member, voteInfo) => {
-  const { proposalId, spaceId, manifestoId } = proposal;
-  const { userId, memberId } = member;
-  const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
-  const manifesto = await ManifestoRepository.findById(manifestoId);
+  const { proposalId, spaceId } = proposal;
+  const { userId } = member;
 
   let participation = await ProposalParticipationRepository.findByProposalIdAndUserId(proposalId, userId);
-  if(participation === undefined) {
-    participation = await ProposalParticipationRepository.createProposalParticipation(proposalId, userId, memberId);
 
-    await ProposalVoteRepository.createProposalVote(proposalId, userHash, manifestoOptionId, inFavor, nullVoteComment);
-
-    proposalNotification.proposalVoteCreated(spaceId, participation.proposalParticipationId);
-
+  if (participation === undefined) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You can not vote on this proposal.');
   } else {
-    const oldVote = await ProposalVoteRepository.findByUserHash(userHash);
-    if (oldVote !== undefined) {
-      await ProposalVoteRepository.updateProposalVote(oldVote.proposalVoteId, manifestoOptionId, inFavor, nullVoteComment);
-    } else {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'It is not posible to update this vote.');
-    }
+    await vote(participation, voteInfo);
+    participation = await ProposalParticipationRepository.updateProposalParticipation(participation.proposalParticipationId, true);
+    proposalNotification.proposalVoteUpdated(spaceId, proposalId, participation.proposalParticipationId, userId);
   }
-  
-  return { proposalParticipation: participation }
+  return { proposalParticipation: participation };
+};
+
+const vote = async (participation, voteInfo) => {
+  if (participation.participated) {
+    await updateVote(voteInfo);
+  } else {
+    const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
+    await ProposalVoteRepository.createProposalVote(participation.proposalId, userHash, manifestoOptionId, inFavor, nullVoteComment);
+  }
+}
+
+const updateVote = async (voteInfo) => {
+  const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
+  const oldVote = await ProposalVoteRepository.findByUserHash(userHash);
+
+  if (oldVote !== undefined) {
+    await ProposalVoteRepository.updateProposalVote(oldVote.proposalVoteId, manifestoOptionId, inFavor, nullVoteComment);
+  } else {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'It is not posible to update this vote.');
+  }
+}
+
+/**
+ * Get Proposal participation
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @returns {Promise<{ proposalParticipation: ProposalParticipation }}>}
+ */
+ const getProposalParticipation = async (participationId) => {
+
+  let participation = await ProposalParticipationRepository.findById(participationId);
+
+  return { proposalParticipation: participation };
 };
 
 module.exports = {
@@ -227,4 +266,5 @@ module.exports = {
   cancelProposal,
   updateProposal,
   voteProposal,
+  getProposalParticipation,
 };

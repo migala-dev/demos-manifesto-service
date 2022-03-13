@@ -63,6 +63,14 @@ const voteProposal = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getProposalParticipation = catchAsync(async (req, res) => {
+  const { participationId } = req.params;
+
+  const result = await proposalService.getProposalParticipation(participationId);
+
+  res.send(result);
+});
+
 module.exports = {
   createDraft,
   updateDraft,
@@ -72,5 +80,6 @@ module.exports = {
   createAndPublishProposal,
   cancelProposal,
   updateProposal,
-  voteProposal
+  voteProposal,
+  getProposalParticipation
 };
