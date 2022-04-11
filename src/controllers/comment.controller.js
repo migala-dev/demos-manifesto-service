@@ -17,42 +17,19 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const express = require('express');
-const proposalRoute = require('./proposal.route');
-const commentRoute = require('./comment.route');
-const docsRoute = require('./docs.route');
-const config = require('../../config/config');
+const catchAsync = require('../shared/utils/catchAsync');
+const { commentService } = require('../services');
 
-const router = express.Router();
+const createComment = catchAsync(async (req, res) => {
+  const { memberId } = req.member;
+  const { content } = req.body;
+  const { manifestoId } = req.params;
 
-const defaultRoutes = [
-  {
-    path: '/proposals',
-    route: proposalRoute,
-  },
-  {
-    path: '/comments',
-    route: commentRoute,
-  }
-];
+  const result = await commentService.createComment(content, '', memberId, manifestoId);
 
-const devRoutes = [
-  // routes available only in development mode
-  {
-    path: '/docs',
-    route: docsRoute,
-  },
-];
-
-defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
+  res.send(result);
 });
 
-/* istanbul ignore next */
-if (config.env === 'development') {
-  devRoutes.forEach((route) => {
-    router.use(route.path, route.route);
-  });
-}
-
-module.exports = router;
+module.exports = {
+  createComment,
+};

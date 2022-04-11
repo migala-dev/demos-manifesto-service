@@ -17,5 +17,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-module.exports.proposalService = require('./proposal.service');
-module.exports.commentService = require('./comment.service');
+const ManifestoCommentRepository = require('../shared/repositories/manifesto-comment.repository');
+
+/**
+ * Create manifesto comment
+ * @param {string} content
+ * @param {string} manifestoCommentParentId
+ * @param {string} memberId
+ * @param {string} manifesto_id
+ * @returns {Promise<ManifestoComment>}
+ */
+const createComment = async (content, manifestoCommentParentId, memberId, manifestoId) => {
+  const manifestoComment = await ManifestoCommentRepository.createManifestoComment(
+    content,
+    manifestoCommentParentId,
+    memberId,
+    manifestoId
+  );
+
+  return { manifestoComment };
+};
+
+module.exports = {
+  createComment,
+};

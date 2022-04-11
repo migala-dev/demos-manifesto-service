@@ -17,42 +17,15 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const express = require('express');
-const proposalRoute = require('./proposal.route');
-const commentRoute = require('./comment.route');
-const docsRoute = require('./docs.route');
-const config = require('../../config/config');
+const Joi = require('joi');
 
-const router = express.Router();
-
-const defaultRoutes = [
-  {
-    path: '/proposals',
-    route: proposalRoute,
-  },
-  {
-    path: '/comments',
-    route: commentRoute,
-  }
-];
-
-const devRoutes = [
-  // routes available only in development mode
-  {
-    path: '/docs',
-    route: docsRoute,
-  },
-];
-
-defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
-});
-
-/* istanbul ignore next */
-if (config.env === 'development') {
-  devRoutes.forEach((route) => {
-    router.use(route.path, route.route);
-  });
+const createComment = {
+    body: Joi.object().keys({
+        content: Joi.string().required()
+    })
 }
 
-module.exports = router;
+module.exports = {
+    createComment
+}
+
