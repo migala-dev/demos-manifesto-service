@@ -24,8 +24,9 @@ const createComment = catchAsync(async (req, res) => {
   const { memberId } = req.member;
   const { content } = req.body;
   const { manifestoId } = req.params;
+  const { manifestoCommentParentId } = req.params;
 
-  const result = await commentService.createComment(content, '', memberId, manifestoId);
+  const result = await commentService.createComment(content, manifestoCommentParentId ?? '', memberId, manifestoId);
 
   res.send(result);
 });

@@ -24,12 +24,22 @@ const validations = require('../../validations/comment.validation')
 const router = express.Router();
 const commentController = require('../../controllers/comment.controller');
 const spaceMember = require('../../shared/middlewares/space-member.middleware');
+const isSubComment = require('../../shared/middlewares/is-sub-comment.middleware');
 
 router.post(
   '/:spaceId/:manifestoId',
   auth(),
   validate(validations.createComment),
   spaceMember,
+  commentController.createComment
+);
+
+router.post(
+  '/:spaceId/:manifestoId/:manifestoCommentParentId',
+  auth(),
+  validate(validations.createComment),
+  spaceMember,
+  isSubComment,
   commentController.createComment
 );
 
