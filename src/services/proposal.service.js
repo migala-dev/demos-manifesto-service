@@ -182,7 +182,7 @@ const createProposalParticipations = async (spaceId, proposalId) => {
   const members = await MemberRepository.findBySpaceIdAndInvitationStatusAccepted(spaceId);
   return Promise.all(
     members.map(({ memberId, userId }) =>
-      ProposalParticipationRepository.createProposalParticipation(proposalId, userId, memberId)
+      ProposalParticipationRepository.createProposalParticipation(proposalId, userId, memberId, spaceId)
     )
   );
 };
