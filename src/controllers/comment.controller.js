@@ -21,12 +21,18 @@ const catchAsync = require('../shared/utils/catchAsync');
 const { commentService } = require('../services');
 
 const createComment = catchAsync(async (req, res) => {
+  const { userId } = req.user;
   const { memberId } = req.member;
+  const { spaceId } = req.member;
   const { content } = req.body;
   const { manifestoId } = req.params;
   const { manifestoCommentParentId } = req.params;
 
-  const result = await commentService.createComment(content, manifestoCommentParentId ?? '', memberId, manifestoId);
+  const result = await commentService.createComment(content, 
+    manifestoCommentParentId ?? '', 
+    memberId, 
+    manifestoId, 
+    spaceId, userId);
 
   res.send(result);
 });

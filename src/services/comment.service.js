@@ -18,6 +18,7 @@
 */
 
 const ManifestoCommentRepository = require('../shared/repositories/manifesto-comment.repository');
+const commentNotification = require('../shared/notifications/comment.notification');
 
 /**
  * Create manifesto comment
@@ -27,13 +28,15 @@ const ManifestoCommentRepository = require('../shared/repositories/manifesto-com
  * @param {string} manifesto_id
  * @returns {Promise<ManifestoComment>}
  */
-const createComment = async (content, manifestoCommentParentId, memberId, manifestoId) => {
+const createComment = async (content, manifestoCommentParentId, memberId, manifestoId, spaceId, userId) => {
   const manifestoComment = await ManifestoCommentRepository.createManifestoComment(
     content,
     manifestoCommentParentId,
     memberId,
     manifestoId
   );
+
+  commentNotification.newComment(spaceId, manifestoComment.manifestoCommentId, userId);
 
   return { manifestoComment };
 };
