@@ -18,3 +18,4 @@
 */
 
 module.exports.proposalService = require('./proposal.service');
+module.exports.commentService = require('./comment.service');

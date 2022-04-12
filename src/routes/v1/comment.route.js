@@ -18,41 +18,36 @@
 */
 
 const express = require('express');
-const proposalRoute = require('./proposal.route');
-const commentRoute = require('./comment.route');
-const docsRoute = require('./docs.route');
-const config = require('../../config/config');
-
+const auth = require('../../shared/middlewares/auth');
+const validate = require('../../shared/middlewares/validate');
+const validations = require('../../validations/comment.validation');
 const router = express.Router();
+const commentController = require('../../controllers/comment.controller');
+const spaceMember = require('../../shared/middlewares/space-member.middleware');
+const isSubComment = require('../../shared/middlewares/is-sub-comment.middleware');
 
-const defaultRoutes = [
-  {
-    path: '/proposals',
-    route: proposalRoute,
-  },
-  {
-    path: '/comments',
-    route: commentRoute,
-  }
-];
+router.get(
+  '/:spaceId/:manifestoCommentId', 
+  auth(), 
+  spaceMember, 
+  commentController.getComment
+);
 
-const devRoutes = [
-  // routes available only in development mode
-  {
-    path: '/docs',
-    route: docsRoute,
-  },
-];
+router.post(
+  '/:spaceId/:manifestoId',
+  auth(),
+  validate(validations.createComment),
+  spaceMember,
+  commentController.createComment
+);
 
-defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
-});
-
-/* istanbul ignore next */
-if (config.env === 'development') {
-  devRoutes.forEach((route) => {
-    router.use(route.path, route.route);
-  });
-}
+router.post(
+  '/:spaceId/:manifestoId/:manifestoCommentParentId',
+  auth(),
+  validate(validations.createComment),
+  spaceMember,
+  isSubComment,
+  commentController.createComment
+);
 
 module.exports = router;

@@ -17,42 +17,30 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const express = require('express');
-const proposalRoute = require('./proposal.route');
-const commentRoute = require('./comment.route');
-const docsRoute = require('./docs.route');
-const config = require('../../config/config');
+const catchAsync = require('../shared/utils/catchAsync');
+const { commentService } = require('../services');
 
-const router = express.Router();
+const createComment = catchAsync(async (req, res) => {
+  const comment = req.body;
+  const { manifestoCommentParentId, manifestoId } = req.params;
+  comment.manifestoCommentParentId = manifestoCommentParentId;
 
-const defaultRoutes = [
-  {
-    path: '/proposals',
-    route: proposalRoute,
-  },
-  {
-    path: '/comments',
-    route: commentRoute,
-  }
-];
+  const member = req.member;
 
-const devRoutes = [
-  // routes available only in development mode
-  {
-    path: '/docs',
-    route: docsRoute,
-  },
-];
+  const result = await commentService.createComment(comment, member, manifestoId);
 
-defaultRoutes.forEach((route) => {
-  router.use(route.path, route.route);
+  res.send(result);
 });
 
-/* istanbul ignore next */
-if (config.env === 'development') {
-  devRoutes.forEach((route) => {
-    router.use(route.path, route.route);
-  });
-}
+const getComment = catchAsync(async (req, res) => {
+  const { manifestoCommentId } = req.params;
 
-module.exports = router;
+  const result = await commentService.getComment(manifestoCommentId);
+
+  res.send(result);
+});
+
+module.exports = {
+  createComment,
+  getComment,
+};
