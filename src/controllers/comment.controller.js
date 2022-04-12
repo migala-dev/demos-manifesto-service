@@ -22,11 +22,10 @@ const { commentService } = require('../services');
 
 const createComment = catchAsync(async (req, res) => {
   const comment = req.body;
-  const { manifestoCommentParentId } = req.params;
+  const { manifestoCommentParentId, manifestoId } = req.params;
   comment.manifestoCommentParentId = manifestoCommentParentId;
 
   const member = req.member;
-  const { manifestoId } = req.params;
 
   const result = await commentService.createComment(comment, member, manifestoId);
 
