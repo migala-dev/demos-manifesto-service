@@ -33,6 +33,15 @@ const createComment = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getComment = catchAsync(async (req, res) => {
+  const { manifestoCommentId } = req.params;
+
+  const result = await commentService.getComment(manifestoCommentId);
+
+  res.send(result);
+});
+
 module.exports = {
   createComment,
+  getComment,
 };

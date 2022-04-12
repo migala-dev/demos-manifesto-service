@@ -44,6 +44,16 @@ const createComment = async (comment, member, manifestoId) => {
   return { manifestoComment };
 };
 
+/**
+ * @param {string} manifestoCommentId
+ */
+const getComment = async (manifestoCommentId) => {
+  const manifestoComment = await ManifestoCommentRepository.findById(manifestoCommentId);
+
+  return { manifestoComment };
+};
+
 module.exports = {
   createComment,
+  getComment,
 };

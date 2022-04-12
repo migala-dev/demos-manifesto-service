@@ -20,11 +20,18 @@
 const express = require('express');
 const auth = require('../../shared/middlewares/auth');
 const validate = require('../../shared/middlewares/validate');
-const validations = require('../../validations/comment.validation')
+const validations = require('../../validations/comment.validation');
 const router = express.Router();
 const commentController = require('../../controllers/comment.controller');
 const spaceMember = require('../../shared/middlewares/space-member.middleware');
 const isSubComment = require('../../shared/middlewares/is-sub-comment.middleware');
+
+router.get(
+  '/:spaceId/:manifestoCommentId', 
+  auth(), 
+  spaceMember, 
+  commentController.getComment
+);
 
 router.post(
   '/:spaceId/:manifestoId',
