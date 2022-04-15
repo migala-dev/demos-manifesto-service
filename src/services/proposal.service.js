@@ -123,9 +123,13 @@ const updateProposal = async (proposal, member, proposalInfo) => {
     member.userId
   );
 
-  proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
+  await ProposalParticipationRepository.deleteByProposalId(proposalId);
 
-  return { manifesto, manifestoOptions, proposal: proposalUpdated };
+  const participations = await createProposalParticipations(spaceId, proposalId);
+
+  proposalNotification.proposalUpdated(spaceId, proposalId);
+
+  return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
 };
 
 /**
