@@ -38,6 +38,18 @@ const createCommentVote = async (vote, member) => {
   return commentVote;
 };
 
+/**
+ * Create and publish a proposal
+ * @param {string} manifestoCommentVoteId
+ * @returns {Promise<ManifestoCommentVote>}
+ */
+const getCommentVote = async (manifestoCommentVoteId) => {
+  const commentVote = await ManifestoCommentVoteRepository.findById(manifestoCommentVoteId);
+
+  return commentVote;
+};
+
 module.exports = {
   createCommentVote,
+  getCommentVote,
 };

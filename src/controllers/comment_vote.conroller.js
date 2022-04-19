@@ -31,6 +31,14 @@ const createCommentVote = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getCommentVote = catchAsync(async (req, res) => {
+  const { manifestoCommentVoteId } = req.params;
+  const result = await commentVoteService.getCommentVote(manifestoCommentVoteId);
+
+  res.send(result);
+});
+
 module.exports = {
   createCommentVote,
+  getCommentVote,
 };

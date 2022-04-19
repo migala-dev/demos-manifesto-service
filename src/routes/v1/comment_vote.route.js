@@ -33,4 +33,11 @@ router.post(
   commentVoteController.createCommentVote
 );
 
+router.get(
+  '/:spaceId/:manifestoCommentVoteId',
+  auth(),
+  spaceMember,
+  commentVoteController.getCommentVote
+);
+
 module.exports = router;
