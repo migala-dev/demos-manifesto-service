@@ -38,7 +38,16 @@ const getCommentVote = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const updateCommentVote = catchAsync(async (req, res) => {
+  const { manifestoCommentVoteId } = req.params;
+  const { upvote } = req.body;
+  const result = await commentVoteService.updateCommentVote(manifestoCommentVoteId, upvote);
+
+  res.send(result);
+});
+
 module.exports = {
   createCommentVote,
   getCommentVote,
+  updateCommentVote,
 };

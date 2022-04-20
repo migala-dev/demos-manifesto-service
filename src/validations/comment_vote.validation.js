@@ -19,12 +19,12 @@
 
 const Joi = require('joi');
 
-const createCommentVote = {
+const isCommentVote = {
   body: Joi.object().keys({
     upvote: Joi.boolean().required(),
   }),
 };
 
 module.exports = {
-  createCommentVote,
+  isCommentVote,
 };

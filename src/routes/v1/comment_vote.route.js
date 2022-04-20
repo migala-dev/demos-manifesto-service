@@ -24,11 +24,12 @@ const validate = require('../../shared/middlewares/validate');
 const validations = require('../../validations/comment_vote.validation');
 const spaceMember = require('../../shared/middlewares/space-member.middleware');
 const commentVoteController = require('../../controllers/comment_vote.conroller');
+const canModifyCommentVote = require('../../shared/middlewares/can-modify-comment-vote.middleware');
 
 router.post(
   '/:spaceId/:manifestoCommentId/vote',
   auth(),
-  validate(validations.createCommentVote),
+  validate(validations.isCommentVote),
   spaceMember,
   commentVoteController.createCommentVote
 );
@@ -38,6 +39,16 @@ router.get(
   auth(),
   spaceMember,
   commentVoteController.getCommentVote
+);
+
+
+router.put(
+  '/:spaceId/:manifestoCommentVoteId',
+  auth(),
+  validate(validations.isCommentVote),
+  canModifyCommentVote,
+  spaceMember,
+  commentVoteController.updateCommentVote
 );
 
 module.exports = router;
