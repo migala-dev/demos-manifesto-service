@@ -46,8 +46,16 @@ const updateCommentVote = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const deleteCommentVote = catchAsync(async (req, res) => {
+  const { manifestoCommentVoteId } = req.params;
+  await commentVoteService.deleteCommentVote(manifestoCommentVoteId);
+
+  res.send({ manifestoCommentVoteId });
+});
+
 module.exports = {
   createCommentVote,
   getCommentVote,
   updateCommentVote,
+  deleteCommentVote,
 };

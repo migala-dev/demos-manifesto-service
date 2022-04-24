@@ -48,9 +48,17 @@ router.put(
   '/:spaceId/:manifestoCommentVoteId',
   auth(),
   validate(validations.isCommentVote),
-  canModifyCommentVote,
   spaceMember,
+  canModifyCommentVote,
   commentVoteController.updateCommentVote
+);
+
+router.delete(
+  '/:spaceId/:manifestoCommentVoteId',
+  auth(),
+  spaceMember,
+  canModifyCommentVote,
+  commentVoteController.deleteCommentVote
 );
 
 module.exports = router;
