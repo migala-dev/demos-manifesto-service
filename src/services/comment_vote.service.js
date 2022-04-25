@@ -20,6 +20,7 @@
 const ManifestoCommentVote = require('../shared/models/manifesto-comment-vote.model');
 const Member = require('../shared/models/member.model');
 const ManifestoCommentVoteRepository = require('../shared/repositories/manifesto-comment-vote.repository');
+const commentVoteNotification = require('../shared/notifications/comment-vote.notification');
 
 /**
  * Create and publish a proposal
@@ -34,6 +35,8 @@ const createCommentVote = async (vote, member) => {
     vote.upvote,
     member.userId
   );
+
+  commentVoteNotification.newCommentVote(member.spaceId, commentVote.manifestoCommentVoteId, member.userId);
 
   return commentVote;
 };
@@ -53,10 +56,13 @@ const getCommentVote = async (manifestoCommentVoteId) => {
  * Create and publish a proposal
  * @param {string} manifestoCommentVoteId
  * @param {boolean} upvote
+ * @param {Member} member
  * @returns {Promise<ManifestoCommentVote>}
  */
-const updateCommentVote = async (manifestoCommentVoteId, upvote) => {
+const updateCommentVote = async (manifestoCommentVoteId, upvote, member) => {
   const commentVote = await ManifestoCommentVoteRepository.updateCommentVote(manifestoCommentVoteId, upvote);
+
+  commentVoteNotification.updateCommentVote(member.spaceId, commentVote.manifestoCommentVoteId, member.userId);
 
   return commentVote;
 };
@@ -64,10 +70,13 @@ const updateCommentVote = async (manifestoCommentVoteId, upvote) => {
 /**
  * Create and publish a proposal
  * @param {string} manifestoCommentVoteId
+ * @param {Member} member
  * @returns {Promise<void>}
  */
-const deleteCommentVote = async (manifestoCommentVoteId) => {
+const deleteCommentVote = async (manifestoCommentVoteId, member) => {
   await ManifestoCommentVoteRepository.deleteCommentVote(manifestoCommentVoteId);
+
+  commentVoteNotification.deleteCommentVote(member.spaceId, manifestoCommentVoteId, member.userId);
 };
 
 module.exports = {

@@ -33,6 +33,7 @@ const createCommentVote = catchAsync(async (req, res) => {
 
 const getCommentVote = catchAsync(async (req, res) => {
   const { manifestoCommentVoteId } = req.params;
+
   const result = await commentVoteService.getCommentVote(manifestoCommentVoteId);
 
   res.send(result);
@@ -41,14 +42,18 @@ const getCommentVote = catchAsync(async (req, res) => {
 const updateCommentVote = catchAsync(async (req, res) => {
   const { manifestoCommentVoteId } = req.params;
   const { upvote } = req.body;
-  const result = await commentVoteService.updateCommentVote(manifestoCommentVoteId, upvote);
+  const member = req.member;
+
+  const result = await commentVoteService.updateCommentVote(manifestoCommentVoteId, upvote, member);
 
   res.send(result);
 });
 
 const deleteCommentVote = catchAsync(async (req, res) => {
   const { manifestoCommentVoteId } = req.params;
-  await commentVoteService.deleteCommentVote(manifestoCommentVoteId);
+  const member = req.member;
+
+  await commentVoteService.deleteCommentVote(manifestoCommentVoteId, member);
 
   res.send({ manifestoCommentVoteId });
 });
