@@ -23,7 +23,6 @@ const ManifestoCommentVoteRepository = require('../shared/repositories/manifesto
 const commentVoteNotification = require('../shared/notifications/comment-vote.notification');
 
 /**
- * Create and publish a proposal
  * @param {ManifestoCommentVote} vote
  * @param {Member} member
  * @returns {Promise<ManifestoCommentVote>}
@@ -42,7 +41,6 @@ const createCommentVote = async (vote, member) => {
 };
 
 /**
- * Create and publish a proposal
  * @param {string} manifestoCommentVoteId
  * @returns {Promise<ManifestoCommentVote>}
  */
@@ -53,7 +51,6 @@ const getCommentVote = async (manifestoCommentVoteId) => {
 };
 
 /**
- * Create and publish a proposal
  * @param {string} manifestoCommentVoteId
  * @param {boolean} upvote
  * @param {Member} member
@@ -68,7 +65,6 @@ const updateCommentVote = async (manifestoCommentVoteId, upvote, member) => {
 };
 
 /**
- * Create and publish a proposal
  * @param {string} manifestoCommentVoteId
  * @param {Member} member
  * @returns {Promise<void>}
