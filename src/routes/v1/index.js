@@ -20,6 +20,7 @@
 const express = require('express');
 const proposalRoute = require('./proposal.route');
 const commentRoute = require('./comment.route');
+const commentVotesRoute = require('./comment_vote.route');
 const docsRoute = require('./docs.route');
 const config = require('../../config/config');
 
@@ -33,6 +34,10 @@ const defaultRoutes = [
   {
     path: '/comments',
     route: commentRoute,
+  },
+  {
+    path: '/comment_votes',
+    route: commentVotesRoute
   }
 ];
 
