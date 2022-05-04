@@ -45,7 +45,7 @@ const canCreateOptions = (optionType, options) =>
  */
 const createDraft = async (space, member, proposalDraft) => {
   const { userId } = member;
-  const { spaceId } = space;
+  const { spaceId, approvalPercentage, participationPercentage } = space;
 
   const manifesto = await ManifestoRepository.createManifesto(proposalDraft, spaceId, userId);
 
@@ -55,7 +55,14 @@ const createDraft = async (space, member, proposalDraft) => {
     manifestoOptions = await ManifestoOptionRepository.createOptions(options, manifesto.manifestoId, userId);
   }
 
-  const proposal = await ProposalRepository.createProposal(manifesto.manifestoId, proposalStatusEnum.DRAFT, spaceId, userId);
+  const proposal = await ProposalRepository.createProposal(
+    manifesto.manifestoId,
+    proposalStatusEnum.DRAFT,
+    spaceId,
+    userId,
+    approvalPercentage,
+    participationPercentage
+  );
 
   return { manifesto, manifestoOptions, proposal };
 };
@@ -87,17 +94,21 @@ const updateDraft = async (proposal, member, proposalDraft) => {
  * Update a draft and publish proposal
  * @param {Proposal} proposal
  * @param {Member} member
+ * @param {Space} space
  * @param {Proposal} proposalCraft
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
  */
-const updateAndPublishDraft = async (proposal, member, proposalDraft) => {
+const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => {
+  const { approvalPercentage, participationPercentage } = space;
   const { proposalId, spaceId } = proposal;
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalDraft);
 
   const proposalUpdated = await ProposalRepository.updateProposal(
     proposal.proposalId,
     proposalStatusEnum.OPEN,
-    member.userId
+    member.userId,
+    approvalPercentage,
+    participationPercentage
   );
 
   const participations = await createProposalParticipations(spaceId, proposalId);
@@ -111,17 +122,20 @@ const updateAndPublishDraft = async (proposal, member, proposalDraft) => {
  * Update an open proposal
  * @param {Proposal} proposal
  * @param {Member} member
+ * @param {Space} space
  * @param {Proposal} proposalInfo
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal }}>}
  */
-const updateProposal = async (proposal, member, proposalInfo) => {
+const updateProposal = async (proposal, member, space, proposalInfo) => {
   const { proposalId, spaceId } = proposal;
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalInfo);
-
+  const { approvalPercentage, participationPercentage } = space;
   const proposalUpdated = await ProposalRepository.updateProposal(
     proposal.proposalId,
     proposalStatusEnum.OPEN,
-    member.userId
+    member.userId,
+    approvalPercentage,
+    participationPercentage
   );
 
   await ProposalParticipationRepository.deleteByProposalId(proposalId);
@@ -165,7 +179,7 @@ const getProposal = async (proposal) => {
  * @returns {Promise<{ manifesto: Manifesto, manifestoOptions: ManifestoOption[], proposal: Proposal, participations: ProposalParticipation[] }}>}
  */
 const createAndPublishProposal = async (proposal, space, member) => {
-  const { spaceId } = space;
+  const { spaceId, approvalPercentage, participationPercentage } = space;
   const { userId } = member;
 
   const manifesto = await ManifestoRepository.createManifesto(proposal, spaceId, userId);
@@ -180,7 +194,9 @@ const createAndPublishProposal = async (proposal, space, member) => {
     manifesto.manifestoId,
     proposalStatusEnum.OPEN,
     spaceId,
-    userId
+    userId,
+    approvalPercentage,
+    participationPercentage
   );
 
   const participations = await createProposalParticipations(spaceId, proposalCreated.proposalId);
@@ -209,7 +225,11 @@ const cancelProposal = async (proposal, member) => {
   const { proposalId, spaceId } = proposal;
   const { userId } = member;
 
-  const proposalCancelled = await ProposalRepository.updateProposal(proposalId, proposalStatusEnum.CANCELLED, userId);
+  const proposalCancelled = await ProposalRepository.updateProposalStatus(
+    proposalId,
+    proposalStatusEnum.CANCELLED,
+    userId,
+  );
 
   proposalNotification.proposalUpdated(spaceId, proposalId, userId);
 
@@ -226,7 +246,7 @@ const deleteDraft = async (proposal, member) => {
   const { proposalId } = proposal;
   const { userId } = member;
 
-  const proposalDeleted = await ProposalRepository.updateProposal(proposalId, proposalStatusEnum.DELETED, userId);
+  const proposalDeleted = await ProposalRepository.updateProposalStatus(proposalId, proposalStatusEnum.DELETED, userId);
 
   return { proposal: proposalDeleted };
 };
@@ -248,7 +268,10 @@ const voteProposal = async (proposal, member, voteInfo) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'You can not vote on this proposal.');
   } else {
     await vote(participation, voteInfo);
-    participation = await ProposalParticipationRepository.updateProposalParticipation(participation.proposalParticipationId, true);
+    participation = await ProposalParticipationRepository.updateProposalParticipation(
+      participation.proposalParticipationId,
+      true
+    );
     proposalNotification.proposalVoteUpdated(spaceId, proposalId, participation.proposalParticipationId, userId);
   }
   return { proposalParticipation: participation };
@@ -259,9 +282,15 @@ const vote = async (participation, voteInfo) => {
     await updateVote(voteInfo);
   } else {
     const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
-    await ProposalVoteRepository.createProposalVote(participation.proposalId, userHash, manifestoOptionId, inFavor, nullVoteComment);
+    await ProposalVoteRepository.createProposalVote(
+      participation.proposalId,
+      userHash,
+      manifestoOptionId,
+      inFavor,
+      nullVoteComment
+    );
   }
-}
+};
 
 const updateVote = async (voteInfo) => {
   const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
@@ -272,7 +301,7 @@ const updateVote = async (voteInfo) => {
   } else {
     throw new ApiError(httpStatus.BAD_REQUEST, 'It is not posible to update this vote.');
   }
-}
+};
 
 /**
  * Get Proposal participation
@@ -280,8 +309,7 @@ const updateVote = async (voteInfo) => {
  * @param {Member} member
  * @returns {Promise<{ proposalParticipation: ProposalParticipation }}>}
  */
- const getProposalParticipation = async (participationId) => {
-
+const getProposalParticipation = async (participationId) => {
   let participation = await ProposalParticipationRepository.findById(participationId);
 
   return { proposalParticipation: participation };
@@ -294,21 +322,24 @@ const updateVote = async (voteInfo) => {
 const checkProposalsExpirationDate = async () => {
   const proposals = await ProposalRepository.findByStatus(proposalStatusEnum.OPEN);
   logger.info(`Checking proposals expiration date (${proposals.length} proposals) `);
-  for(const proposal of proposals) {
+  for (const proposal of proposals) {
     const now = new Date();
-    const expirationDate = new Date(proposal.expiredAt); 
+    const expirationDate = new Date(proposal.expiredAt);
     if (expirationDate < now) {
       logger.info(`Closing proposal: ${proposal.proposalId}`);
-      const doNotUpdateExpirationDate = true;
-      await ProposalRepository.updateProposal(proposal.proposalId, proposalStatusEnum.CLOSED, null, doNotUpdateExpirationDate);
+      await ProposalRepository.updateProposalStatus(
+        proposal.proposalId,
+        proposalStatusEnum.CLOSED,
+        null
+      );
       proposalNotification.proposalUpdated(proposal.spaceId, proposal.proposalId);
     }
   }
-}
+};
 
-// Every 3 minutes 
+// Every 3 minutes
 const intervalTime = 1 * 60 * 1000;
-setInterval(() => checkProposalsExpirationDate(), intervalTime)
+setInterval(() => checkProposalsExpirationDate(), intervalTime);
 
 module.exports = {
   createDraft,

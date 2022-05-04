@@ -42,15 +42,15 @@ const deleteDraft = catchAsync(async (req, res) => {
 
 const updateAndPublishDraft = catchAsync(async (req, res) => {
   const proposalDraft = req.body;
-  const { proposal, member } = req;
-  const result = await proposalService.updateAndPublishDraft(proposal, member, proposalDraft);
+  const { proposal, member, space } = req;
+  const result = await proposalService.updateAndPublishDraft(proposal, member, space, proposalDraft);
   res.send(result);
 });
 
 const updateProposal = catchAsync(async (req, res) => {
   const proposalInfo = req.body;
-  const { proposal, member } = req;
-  const result = await proposalService.updateProposal(proposal, member, proposalInfo);
+  const { proposal, member, space } = req;
+  const result = await proposalService.updateProposal(proposal, member, space, proposalInfo);
   res.send(result);
 });
 
