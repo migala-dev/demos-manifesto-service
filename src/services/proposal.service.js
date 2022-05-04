@@ -31,6 +31,7 @@ const ManifestoOption = require('../shared/models/manifesto-option.model');
 const Proposal = require('../shared/models/proposal.model');
 const proposalNotification = require('../shared/notifications/proposals.notification');
 const ProposalParticipation = require('../shared/models/proposal-participation.model');
+const logger = require('../shared/config/logger');
 
 const canCreateOptions = (optionType, options) =>
   optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
@@ -124,6 +125,7 @@ const updateProposal = async (proposal, member, proposalInfo) => {
   );
 
   await ProposalParticipationRepository.deleteByProposalId(proposalId);
+  await ProposalVoteRepository.deleteByProposalId(proposalId);
 
   const participations = await createProposalParticipations(spaceId, proposalId);
 
@@ -146,7 +148,13 @@ const getProposal = async (proposal) => {
 
   const participations = await ProposalParticipationRepository.findByProposalId(proposalId);
 
-  return { manifesto, manifestoOptions, proposal, participations };
+  let votes = [];
+
+  if (proposal.status === proposalStatusEnum.CLOSED) {
+    votes = await ProposalVoteRepository.findByProposalId(proposal.proposalId);
+  }
+
+  return { manifesto, manifestoOptions, proposal, participations, votes };
 };
 
 /**
@@ -278,6 +286,29 @@ const updateVote = async (voteInfo) => {
 
   return { proposalParticipation: participation };
 };
+
+/**
+ * Check the expiration date from the proposal in progress or open
+ * @returns {Promise<void>}>}
+ */
+const checkProposalsExpirationDate = async () => {
+  const proposals = await ProposalRepository.findByStatus(proposalStatusEnum.OPEN);
+  logger.info(`Checking proposals expiration date (${proposals.length} proposals) `);
+  for(const proposal of proposals) {
+    const now = new Date();
+    const expirationDate = new Date(proposal.expiredAt); 
+    if (expirationDate < now) {
+      logger.info(`Closing proposal: ${proposal.proposalId}`);
+      const doNotUpdateExpirationDate = true;
+      await ProposalRepository.updateProposal(proposal.proposalId, proposalStatusEnum.CLOSED, null, doNotUpdateExpirationDate);
+      proposalNotification.proposalUpdated(proposal.spaceId, proposal.proposalId);
+    }
+  }
+}
+
+// Every 3 minutes 
+const intervalTime = 1 * 60 * 1000;
+setInterval(() => checkProposalsExpirationDate(), intervalTime)
 
 module.exports = {
   createDraft,
