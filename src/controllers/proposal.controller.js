@@ -54,6 +54,14 @@ const updateProposal = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const resetProposalParticipation = catchAsync(async (req, res) => {
+  const { proposal, member, space } = req;
+ 
+  const result = await proposalService.resetProposalParticipation(proposal, member, space);
+
+  res.send(result);
+});
+
 const getProposal = catchAsync(async (req, res) => {
   const { proposal } = req;
   const result = await proposalService.getProposal(proposal);
@@ -100,5 +108,6 @@ module.exports = {
   cancelProposal,
   updateProposal,
   voteProposal,
-  getProposalParticipation
+  getProposalParticipation,
+  resetProposalParticipation
 };

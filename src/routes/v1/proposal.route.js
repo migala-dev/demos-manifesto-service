@@ -96,6 +96,13 @@ router.get(
   spaceMember,
   proposalController.getProposalParticipation
 );
+router.post(
+  '/:spaceId/:proposalId/participation/reset',
+  auth(),
+  spaceRoles(spaceRoleEnum.REPRESENTATIVE, spaceRoleEnum.ADMIN),
+  proposalStatus(proposalStatusEnum.OPEN),
+  proposalController.resetProposalParticipation
+);
 
 
 module.exports = router;

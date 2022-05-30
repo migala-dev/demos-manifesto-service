@@ -32,6 +32,7 @@ const Proposal = require('../shared/models/proposal.model');
 const proposalNotification = require('../shared/notifications/proposals.notification');
 const ProposalParticipation = require('../shared/models/proposal-participation.model');
 const logger = require('../shared/config/logger');
+const Space = require('../shared/models/space.model');
 
 const canCreateOptions = (optionType, options) =>
   optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
@@ -147,6 +148,37 @@ const updateProposal = async (proposal, member, space, proposalInfo) => {
 
   return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
 };
+
+/**
+ * Reset proposal votes on an open proposal
+ * @param {Proposal} proposal
+ * @param {Member} member
+ * @param {Space} space
+ * @returns {Promise<{ proposal: Proposal, participations: ProposalParticipation[] }}>}
+ */
+const resetProposalParticipation = async (proposal, member, space) => {
+  const { proposalId, spaceId } = proposal;
+  const { approvalPercentage, participationPercentage } = space;
+
+  const proposalUpdated = await ProposalRepository.updateProposal(
+    proposal.proposalId,
+    proposalStatusEnum.OPEN,
+    member.userId,
+    approvalPercentage,
+    participationPercentage
+  );
+
+  await ProposalParticipationRepository.deleteByProposalId(proposalId);
+  await ProposalVoteRepository.deleteByProposalId(proposalId);
+
+  const participations = await createProposalParticipations(spaceId, proposalId);
+
+  proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
+
+  return { participations, proposal: proposalUpdated };
+};
+
+
 
 /**
  * Get a proposal with the manifesto and the manifesto options
@@ -352,4 +384,5 @@ module.exports = {
   updateProposal,
   voteProposal,
   getProposalParticipation,
+  resetProposalParticipation,
 };
