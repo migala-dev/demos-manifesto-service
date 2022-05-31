@@ -102,6 +102,15 @@ const updateDraft = async (proposal, member, proposalDraft) => {
 const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => {
   const { approvalPercentage, participationPercentage } = space;
   const { proposalId, spaceId } = proposal;
+
+  const { optionType, options } = proposalDraft;
+  if (optionType === optionTypeEnum.MULTIPLE_OPTIONS && (options.length < 2 || options.length > 20)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'For multiple options proposals it is required that there be a minimum of 2 and a maximum of 20 options.'
+    );
+  }
+
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalDraft);
 
   const proposalUpdated = await ProposalRepository.updateProposal(
@@ -178,8 +187,6 @@ const resetProposalParticipation = async (proposal, member, space) => {
   return { participations, proposal: proposalUpdated };
 };
 
-
-
 /**
  * Get a proposal with the manifesto and the manifesto options
  * @param {Proposal} proposal
@@ -214,10 +221,17 @@ const createAndPublishProposal = async (proposal, space, member) => {
   const { spaceId, approvalPercentage, participationPercentage } = space;
   const { userId } = member;
 
+  const { optionType, options } = proposal;
+  if (optionType === optionTypeEnum.MULTIPLE_OPTIONS && (options.length < 2 || options.length > 20)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'For multiple options proposals it is required that there be a minimum of 2 and a maximum of 20 options.'
+    );
+  }
+
   const manifesto = await ManifestoRepository.createManifesto(proposal, spaceId, userId);
 
   let manifestoOptions = [];
-  const { options, optionType } = proposal;
   if (canCreateOptions(optionType, options)) {
     manifestoOptions = await ManifestoOptionRepository.createOptions(options, manifesto.manifestoId, userId);
   }
@@ -257,11 +271,7 @@ const cancelProposal = async (proposal, member) => {
   const { proposalId, spaceId } = proposal;
   const { userId } = member;
 
-  const proposalCancelled = await ProposalRepository.updateProposalStatus(
-    proposalId,
-    proposalStatusEnum.CANCELLED,
-    userId,
-  );
+  const proposalCancelled = await ProposalRepository.updateProposalStatus(proposalId, proposalStatusEnum.CANCELLED, userId);
 
   proposalNotification.proposalUpdated(spaceId, proposalId, userId);
 
@@ -359,11 +369,7 @@ const checkProposalsExpirationDate = async () => {
     const expirationDate = new Date(proposal.expiredAt);
     if (expirationDate < now) {
       logger.info(`Closing proposal: ${proposal.proposalId}`);
-      await ProposalRepository.updateProposalStatus(
-        proposal.proposalId,
-        proposalStatusEnum.CLOSED,
-        null
-      );
+      await ProposalRepository.updateProposalStatus(proposal.proposalId, proposalStatusEnum.CLOSED, null);
       proposalNotification.proposalUpdated(proposal.spaceId, proposal.proposalId);
     }
   }
