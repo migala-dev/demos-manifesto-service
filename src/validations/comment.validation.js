@@ -19,13 +19,13 @@
 
 const Joi = require('joi');
 
-const createComment = {
+const comment = {
     body: Joi.object().keys({
         content: Joi.string().required()
     })
 }
 
 module.exports = {
-    createComment
+    comment
 }
 

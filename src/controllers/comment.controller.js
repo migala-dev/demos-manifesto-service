@@ -49,8 +49,19 @@ const deleteComment = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const updateComment = catchAsync(async (req, res) => {
+  const { manifestoCommentId } = req.params;
+  const member = req.member;
+  const { content } = req.body;
+
+  const result = await commentService.updateComment(manifestoCommentId, member, content);
+
+  res.send(result);
+});
+
 module.exports = {
   createComment,
   getComment,
-  deleteComment
+  deleteComment,
+  updateComment,
 };
