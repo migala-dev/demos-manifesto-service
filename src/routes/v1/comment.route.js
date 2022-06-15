@@ -26,6 +26,7 @@ const commentController = require('../../controllers/comment.controller');
 const spaceMember = require('../../shared/middlewares/space-member.middleware');
 const isSubComment = require('../../middlewares/is-sub-comment.middleware');
 const deleteComment = require('../../shared/middlewares/delete-comment.middleware');
+const canModifyComment = require('../../middlewares/can-modify-comment.middleware')
 
 router.get(
   '/:spaceId/:manifestoCommentId', 
@@ -64,6 +65,7 @@ router.put(
   auth(),
   validate(validations.comment),
   spaceMember,
+  canModifyComment,
   commentController.updateComment
 );
 
