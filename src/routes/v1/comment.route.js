@@ -25,6 +25,7 @@ const router = express.Router();
 const commentController = require('../../controllers/comment.controller');
 const spaceMember = require('../../shared/middlewares/space-member.middleware');
 const isSubComment = require('../../shared/middlewares/is-sub-comment.middleware');
+const deleteComment = require('../../shared/middlewares/delete-comment.middleware');
 
 router.get(
   '/:spaceId/:manifestoCommentId', 
@@ -48,6 +49,14 @@ router.post(
   spaceMember,
   isSubComment,
   commentController.createComment
+);
+
+router.delete(
+  '/:spaceId/:manifestoId/:manifestoCommentId',
+  auth(),
+  spaceMember,
+  deleteComment,
+  commentController.deleteComment
 );
 
 module.exports = router;
