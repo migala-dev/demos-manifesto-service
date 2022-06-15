@@ -52,7 +52,7 @@ router.post(
 );
 
 router.delete(
-  '/:spaceId/:manifestoId/:manifestoCommentId',
+  '/:spaceId/:manifestoCommentId',
   auth(),
   spaceMember,
   deleteComment,
