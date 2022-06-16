@@ -271,7 +271,7 @@ const cancelProposal = async (proposal, member) => {
   const { proposalId, spaceId } = proposal;
   const { userId } = member;
 
-  const proposalCancelled = await ProposalRepository.updateProposalStatus(proposalId, proposalStatusEnum.CANCELLED, userId);
+  const proposalCancelled = await ProposalRepository.updateProposalStatus(proposalId, proposalStatusEnum.CANCELLED, null, userId);
 
   proposalNotification.proposalUpdated(spaceId, proposalId, userId);
 
@@ -288,7 +288,7 @@ const deleteDraft = async (proposal, member) => {
   const { proposalId } = proposal;
   const { userId } = member;
 
-  const proposalDeleted = await ProposalRepository.updateProposalStatus(proposalId, proposalStatusEnum.DELETED, userId);
+  const proposalDeleted = await ProposalRepository.updateProposalStatus(proposalId, proposalStatusEnum.DELETED, null, userId);
 
   return { proposal: proposalDeleted };
 };
@@ -369,14 +369,25 @@ const checkProposalsExpirationDate = async () => {
     const expirationDate = new Date(proposal.expiredAt);
     if (expirationDate < now) {
       logger.info(`Closing proposal: ${proposal.proposalId}`);
-      await ProposalRepository.updateProposalStatus(proposal.proposalId, proposalStatusEnum.CLOSED, null);
+      const { participationPercentage, approvalPercentage} = proposal;
+      const { optionType } = await ManifestoRepository.findById(proposal.manifestoId);
+      const participation = await ProposalParticipationRepository.findByProposalId(proposal.proposalId);
+
+      const porcentageRequired =
+          optionType === optionTypeEnum.IN_FAVOR_OR_OPPOSSING
+              ? approvalPercentage
+              : participationPercentage;
+      const requiredVotes = Math.ceil(participation.length * porcentageRequired / 100);
+      const insufficientVotes = (participation.filter(p => p.participated).length) < requiredVotes;
+
+      await ProposalRepository.updateProposalStatus(proposal.proposalId, proposalStatusEnum.CLOSED, insufficientVotes, null);
       proposalNotification.proposalUpdated(proposal.spaceId, proposal.proposalId);
     }
   }
 };
-
+// TODO: Wait until the first method finish
 // Every 3 minutes
-const intervalTime = 1 * 60 * 1000;
+const intervalTime = 3 * 60 * 1000;
 setInterval(() => checkProposalsExpirationDate(), intervalTime);
 
 module.exports = {
