@@ -20,6 +20,7 @@
 const httpStatus = require('http-status');
 const manifestoCommentRepository = require('../shared/repositories/manifesto-comment.repository');
 const ApiError = require('../shared/utils/ApiError');
+const CommentDeletedError = require('../utils/comment-deleted-error');
 
 const canModifyComment = async (req, _, next) => {
   const { manifestoCommentId } = req.params;
@@ -28,6 +29,10 @@ const canModifyComment = async (req, _, next) => {
   const manifestoComment = await manifestoCommentRepository.findById(manifestoCommentId);
   if (!manifestoComment) {
     return next(new ApiError(httpStatus.NOT_FOUND, 'Manifesto comment not found'));
+  }
+
+  if (manifestoComment.deleted) {
+    return next(new CommentDeletedError());
   }
 
   if (manifestoComment.createdByMember != memberId) {

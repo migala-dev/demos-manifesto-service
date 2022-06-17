@@ -19,11 +19,18 @@
 
 const httpStatus = require('http-status');
 const manifestoCommentVoteRepository = require('../shared/repositories/manifesto-comment-vote.repository');
+const manifestoCommentRepository = require('../shared/repositories/manifesto-comment.repository');
 const ApiError = require('../shared/utils/ApiError');
+const CommentDeletedError = require('../utils/comment-deleted-error');
 
 const canCreateCommentVote = async (req, _, next) => {
   const { manifestoCommentId } = req.params;
   const { userId } = req.user;
+
+  const manifestoComment = await manifestoCommentRepository.findById(manifestoCommentId);
+  if (manifestoComment.deleted) {
+    return next(new CommentDeletedError());
+  }
 
   const manifestoCommentVote = await manifestoCommentVoteRepository.findByManifestoCommentIdAndUserId(
     manifestoCommentId,
