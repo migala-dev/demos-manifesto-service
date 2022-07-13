@@ -17,15 +17,24 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const Joi = require('joi');
+const httpStatus = require('http-status');
+const manifestoCommentVoteRepository = require('../shared/repositories/manifesto-comment-vote.repository');
+const ApiError = require('../shared/utils/ApiError');
 
-const comment = {
-    body: Joi.object().keys({
-        content: Joi.string().required()
-    })
-}
+const canModifyCommentVote = async (req, _, next) => {
+  const { manifestoCommentVoteId } = req.params;
+  const { userId } = req.user;
 
-module.exports = {
-    comment
-}
+  const manifestoCommentVote = await manifestoCommentVoteRepository.findById(manifestoCommentVoteId);
+  if (!manifestoCommentVote) {
+    return next(new ApiError(httpStatus.NOT_FOUND, 'Manifesto comment vote not found'));
+  }
 
+  if (manifestoCommentVote.userId != userId) {
+    return next(new ApiError(httpStatus.BAD_REQUEST, 'You can not modify this comment vote'));
+  }
+
+  return next();
+};
+
+module.exports = canModifyCommentVote;

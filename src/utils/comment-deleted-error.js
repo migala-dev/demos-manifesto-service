@@ -17,15 +17,15 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const Joi = require('joi');
+const ApiError = require('../shared/utils/ApiError');
+const httpStatus = require('http-status');
 
-const comment = {
-    body: Joi.object().keys({
-        content: Joi.string().required()
-    })
+class CommentDeletedError extends ApiError {
+  constructor(isOperational = true, stack = '') {
+    const message = 'This comment is deleted';
+    const statusCode = httpStatus.BAD_REQUEST;
+    super(statusCode, message, isOperational, stack);
+  }
 }
 
-module.exports = {
-    comment
-}
-
+module.exports = CommentDeletedError;

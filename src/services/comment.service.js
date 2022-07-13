@@ -53,7 +53,34 @@ const getComment = async (manifestoCommentId) => {
   return { manifestoComment };
 };
 
+/**
+ * @param {string} manifestoCommentId
+ * @param {Member} member
+ */
+const deleteComment = async (manifestoCommentId, member) => {
+  const manifestoComment = await ManifestoCommentRepository.deleteComment(manifestoCommentId);
+
+  commentNotification.updateComment(member.spaceId, manifestoComment.manifestoCommentId, member.userId);
+
+  return { manifestoComment };
+};
+
+/**
+ * @param {string} manifestoCommentId
+ * @param {Member} member
+ * @param {string} content
+ */
+ const updateComment = async (manifestoCommentId, member, content) => {
+  const manifestoComment = await ManifestoCommentRepository.updateComment(manifestoCommentId, content);
+
+  commentNotification.updateComment(member.spaceId, manifestoComment.manifestoCommentId, member.userId);
+
+  return { manifestoComment };
+};
+
 module.exports = {
   createComment,
   getComment,
+  deleteComment,
+  updateComment
 };
