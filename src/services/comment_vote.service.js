@@ -17,6 +17,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+const ApiError = require('../shared/utils/ApiError');
+const httpStatus = require('http-status');
 const ManifestoCommentVote = require('../shared/models/manifesto-comment-vote.model');
 const Member = require('../shared/models/member.model');
 const ManifestoCommentVoteRepository = require('../shared/repositories/manifesto-comment-vote.repository');
@@ -46,6 +48,10 @@ const createCommentVote = async (vote, member) => {
  */
 const getCommentVote = async (manifestoCommentVoteId) => {
   const commentVote = await ManifestoCommentVoteRepository.findById(manifestoCommentVoteId);
+
+  if (!commentVote) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'commentVote not found.');
+  }
 
   return commentVote;
 };
