@@ -50,7 +50,7 @@ const getCommentVote = async (manifestoCommentVoteId) => {
   const commentVote = await ManifestoCommentVoteRepository.findById(manifestoCommentVoteId);
 
   if (!commentVote) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Nonexistent manifestoCommentVoteId.');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'commentVote not found.');
   }
 
   return commentVote;
