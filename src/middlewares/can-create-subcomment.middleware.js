@@ -20,9 +20,8 @@
 const httpStatus = require('http-status');
 const manifestoCommentRepository = require('../shared/repositories/manifesto-comment.repository');
 const ApiError = require('../shared/utils/ApiError');
-const CommentDeletedError = require('../utils/comment-deleted-error');
 
-const isSubComment = async (req, res, next) => {
+const canCreateSubcomment = async (req, res, next) => {
   const { manifestoCommentParentId } = req.params;
 
   const manifestoComment = await manifestoCommentRepository.findById(manifestoCommentParentId);
@@ -30,15 +29,17 @@ const isSubComment = async (req, res, next) => {
     return next(new ApiError(httpStatus.NOT_FOUND, 'Manifesto comment not found'));
   }
 
-  if (manifestoComment.deleted) {
-    return next(new CommentDeletedError());
-  }
-
   if (manifestoComment.manifestoCommentParentId) {
     return next(new ApiError(httpStatus.BAD_REQUEST, 'This comment cannot have a sub comment'));
+  }
+
+  const manifestoCommentChildren = await manifestoCommentRepository.findAllByParentId(manifestoCommentParentId);
+  if (manifestoComment.deleted && manifestoCommentChildren.length === 0) {
+    return next(new ApiError(httpStatus.BAD_REQUEST, 'The comment deleted does not have any subcomment'));
   }
 
   return next();
 };
 
-module.exports = isSubComment;
+module.exports = canCreateSubcomment;
+
