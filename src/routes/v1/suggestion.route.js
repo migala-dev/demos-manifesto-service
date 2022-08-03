@@ -19,6 +19,17 @@
 
 const express = require('express');
 
+const auth = require('../../shared/middlewares/auth');
+const validate = require('../../shared/middlewares/validate');
+const validations = require('../../validations/suggestion.validation');
+// { sugestionStatatusEnum }
+const { spaceRoleEnum } = require('../../shared/enums');
+const spaceRoles = require('../../shared/middlewares/space-role.middleware');
+const spaceMember = require('../../shared/middlewares/space-member.middleware');
+// suggestion middleware
+// suggestionStatus middleware
+// suggestion controller
+
 const router = express.Router();
 
 // get suggestion
@@ -34,7 +45,15 @@ router.route('/:spaceId/draft/:suggestionId').put().delete();
 router.route('/:spaceId/draft/:suggestionId/publish').put();
 
 // create and publish suggestion 
-router.route('/:spaceId/publish').post();
+router.route('/:spaceId/publish').post(
+  auth(),
+  validate(validations.suggestion),
+  spaceRoles(
+    spaceRoleEnum.ADMIN,
+    spaceRoleEnum.WORKER
+  ),
+
+);
 
 // update suggestion
 router.route('/:spaceId/:suggestionId').put();
