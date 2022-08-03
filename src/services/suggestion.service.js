@@ -21,7 +21,7 @@ const { suggestionStatusEnum } = require('../shared/enums');
 const ManifestoRepository = require('../shared/repositories/manifesto.repository');
 const SuggestionRepository = require('../shared/repositories/suggestion.repository');
 const MemberRepository = require('../shared/repositories/member.repository');
-const suggestionParticipationRepository = require('../shared/repositories/suggestion-participation.repository');
+const SuggestionParticipationRepository = require('../shared/repositories/suggestion-participation.repository');
 const suggestionNotification = require('../shared/notifications/suggestion.notification');
 
 const createAndPublishSuggestion = async (suggestion, space, member) => {
@@ -37,17 +37,17 @@ const createAndPublishSuggestion = async (suggestion, space, member) => {
   );
 
   const { suggestionId } = suggestionCreated;
-  const participations = createSuggestionParticipations(suggestionId);
+  const participations = await createSuggestionParticipations(spaceId, suggestionId);
 
   suggestionNotification.suggestionUpdated(spaceId, suggestionId, userId)
 
   return { manifesto, suggestion, suggestionCreated, participations };
 };
 
-const createSuggestionParticipations = async suggestionId => {
+const createSuggestionParticipations = async (spaceId, suggestionId) => {
   const members = await MemberRepository.findBySpaceIdAndInvitationStatusAccepted(spaceId);
   const participations = Promise.all(members.map(({ userId, memberId }) => 
-    suggestionParticipationRepository.createSuggestionParticipation(suggestionId, userId, memberId)
+    SuggestionParticipationRepository.createSuggestionParticipation(suggestionId, userId, memberId)
   ));
 
   return participations;
