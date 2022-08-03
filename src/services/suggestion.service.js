@@ -24,6 +24,13 @@ const MemberRepository = require('../shared/repositories/member.repository');
 const SuggestionParticipationRepository = require('../shared/repositories/suggestion-participation.repository');
 const suggestionNotification = require('../shared/notifications/suggestion.notification');
 
+/**
+ * Creates and publishes a suggestion
+ * @param {Suggestion} suggestion 
+ * @param {Space} space 
+ * @param {Member} member 
+ * @returns {Promise<{ manifesto: Manifesto, suggestion: Suggestion }>}
+ */
 const createAndPublishSuggestion = async (suggestion, space, member) => {
   const { spaceId } = space;
   const { userId } = member;
