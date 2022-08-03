@@ -17,6 +17,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-module.exports.proposalService = require('./proposal.service');
-module.exports.commentService = require('./comment.service');
-module.exports.suggestionService = require('./suggestion.service');
+const express = require('express');
+
+const auth = require('../../shared/middlewares/auth');
+const validate = require('../../shared/middlewares/validate');
+const validations = require('../../validations/suggestion.validation');
+const { spaceRoleEnum } = require('../../shared/enums');
+const spaceRoles = require('../../shared/middlewares/space-role.middleware');
+const suggestionController = require('../../controllers/suggestion.controller');
+
+const router = express.Router();
+
+router
+  .route('/:spaceId/publish')
+  .post(
+    auth(),
+    validate(validations.suggestion),
+    spaceRoles(
+      spaceRoleEnum.ADMIN,
+      spaceRoleEnum.WORKER
+    ),
+    suggestionController.createAndPublishSuggestion
+);
+
+module.exports = router;

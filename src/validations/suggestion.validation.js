@@ -17,6 +17,25 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-module.exports.proposalService = require('./proposal.service');
-module.exports.commentService = require('./comment.service');
-module.exports.suggestionService = require('./suggestion.service');
+const Joi = require('joi');
+
+const { optionTypeEnum } = require('../shared/enums');
+
+const suggestion = {
+  body: Joi.object().keys({
+    title: Joi.string().required(),
+    content: Joi.string().allow(null, ''),
+    optionType: Joi.number().valid(...Object.values(optionTypeEnum)),
+    options: Joi.array()
+      .items(
+        Joi.object().keys({
+            manifestoOptionId: Joi.string().allow(null, ''),
+            title: Joi.string().allow(null, ''),
+        })
+      )
+  })
+};
+
+module.exports = {
+  suggestion
+};
