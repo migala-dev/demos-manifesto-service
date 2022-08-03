@@ -17,6 +17,25 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-module.exports.proposalService = require('./proposal.service');
-module.exports.commentService = require('./comment.service');
-module.exports.suggestionService = require('./suggestion.service');
+const suggestionStatusEnum = require('../shared/enums/suggestion-status.enum');
+const ManifestoRepository = require('../shared/repositories/manifesto.repository');
+const SuggestionRepository = require('../shared/repositories/suggestion.repository');
+
+const createAndPublishSuggestion = async (suggestion, space, member) => {
+  const { spaceId } = space;
+  const { userId } = member;
+  
+  const manifesto = await ManifestoRepository.createManifesto(suggestion, spaceId, userId);
+
+  const suggestionCreated = await SuggestionRepository.createSuggestion(
+    manifesto.manifestoId,
+    suggestionStatusEnum,
+    userId
+  );
+
+  return { manifesto, suggestion, suggestionCreated }
+};
+
+module.exports = {
+  createAndPublishSuggestion
+};

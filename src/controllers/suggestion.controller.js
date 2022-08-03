@@ -17,6 +17,18 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-module.exports.proposalService = require('./proposal.service');
-module.exports.commentService = require('./comment.service');
-module.exports.suggestionService = require('./suggestion.service');
+const catchAsync = require('../shared/utils/catchAsync');
+const { suggestionService } = require('../services');
+
+const createAndPublishSuggestion = catchAsync(async (req, res) => {
+  const suggestion = req.body;
+  const { space, member } = req;
+
+  const result = await suggestionService.createAndPublishSuggestion(suggestion, space, member)
+
+  res.send(result);
+});
+
+module.exports = {
+  createAndPublishSuggestion
+};

@@ -29,6 +29,7 @@ const spaceMember = require('../../shared/middlewares/space-member.middleware');
 // suggestion middleware
 // suggestionStatus middleware
 // suggestion controller
+const suggestionController = require('../../controllers/suggestion.controller');
 
 const router = express.Router();
 
@@ -45,14 +46,17 @@ router.route('/:spaceId/draft/:suggestionId').put().delete();
 router.route('/:spaceId/draft/:suggestionId/publish').put();
 
 // create and publish suggestion 
-router.route('/:spaceId/publish').post(
-  auth(),
-  validate(validations.suggestion),
-  spaceRoles(
-    spaceRoleEnum.ADMIN,
-    spaceRoleEnum.WORKER
-  ),
-
+router
+  .route('/:spaceId/publish')
+  .post(
+    auth(),
+    validate(validations.suggestion),
+    spaceRoles(
+      spaceRoleEnum.ADMIN,
+      spaceRoleEnum.WORKER,
+      spaceRoleEnum.REPRESENTATIVE
+    ),
+    suggestionController.createAndPublishSuggestion
 );
 
 // update suggestion
