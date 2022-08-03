@@ -46,7 +46,7 @@ const createAndPublishSuggestion = async (suggestion, space, member) => {
   const { suggestionId } = suggestionCreated;
   suggestionNotification.suggestionUpdated(spaceId, suggestionId, userId)
 
-  return { manifesto, suggestion, suggestionCreated };
+  return { manifesto, suggestion: suggestionCreated };
 };
 
 const createSuggestionParticipations = async (spaceId, suggestionId) => {
