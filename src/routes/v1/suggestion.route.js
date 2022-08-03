@@ -53,8 +53,7 @@ router
     validate(validations.suggestion),
     spaceRoles(
       spaceRoleEnum.ADMIN,
-      spaceRoleEnum.WORKER,
-      spaceRoleEnum.REPRESENTATIVE
+      spaceRoleEnum.WORKER
     ),
     suggestionController.createAndPublishSuggestion
 );
