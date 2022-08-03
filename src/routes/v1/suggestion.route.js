@@ -22,30 +22,13 @@ const express = require('express');
 const auth = require('../../shared/middlewares/auth');
 const validate = require('../../shared/middlewares/validate');
 const validations = require('../../validations/suggestion.validation');
-// { sugestionStatatusEnum }
 const { spaceRoleEnum } = require('../../shared/enums');
 const spaceRoles = require('../../shared/middlewares/space-role.middleware');
 const spaceMember = require('../../shared/middlewares/space-member.middleware');
-// suggestion middleware
-// suggestionStatus middleware
-// suggestion controller
 const suggestionController = require('../../controllers/suggestion.controller');
 
 const router = express.Router();
 
-// get suggestion
-router.route('/:spaceId/:suggestionId').get(); 
-
-// create suggestion draft
-router.route('/:spaceId/draft').post();
-
-// update and delete suggestion draft
-router.route('/:spaceId/draft/:suggestionId').put().delete();
-
-// update and publish suggestion draft
-router.route('/:spaceId/draft/:suggestionId/publish').put();
-
-// create and publish suggestion 
 router
   .route('/:spaceId/publish')
   .post(
@@ -57,20 +40,5 @@ router
     ),
     suggestionController.createAndPublishSuggestion
 );
-
-// update suggestion
-router.route('/:spaceId/:suggestionId').put();
-
-// calcel suggestion 
-router.route('/:spaceId/:suggestionId/cancel').put();
-
-// vote suggestion
-router.route('/:spaceId/:suggestionId/vote').put();
-
-// get suggestion paticipation 
-router.route('/:spaceId/participation/:participationId').get();
-
-// reset suggestion participation
-router.route('/:spaceId/:suggestionId/reset').post();
 
 module.exports = router;
