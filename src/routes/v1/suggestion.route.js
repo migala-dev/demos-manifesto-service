@@ -24,7 +24,6 @@ const validate = require('../../shared/middlewares/validate');
 const validations = require('../../validations/suggestion.validation');
 const { spaceRoleEnum } = require('../../shared/enums');
 const spaceRoles = require('../../shared/middlewares/space-role.middleware');
-const spaceMember = require('../../shared/middlewares/space-member.middleware');
 const suggestionController = require('../../controllers/suggestion.controller');
 
 const router = express.Router();
