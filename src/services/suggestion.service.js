@@ -17,9 +17,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const suggestionStatusEnum = require('../shared/enums/suggestion-status.enum');
+const { suggestionStatusEnum } = require('../shared/enums');
 const ManifestoRepository = require('../shared/repositories/manifesto.repository');
 const SuggestionRepository = require('../shared/repositories/suggestion.repository');
+const suggestionNotification = require('../shared/notifications/suggestion.notification');
 
 const createAndPublishSuggestion = async (suggestion, space, member) => {
   const { spaceId } = space;
@@ -29,9 +30,12 @@ const createAndPublishSuggestion = async (suggestion, space, member) => {
 
   const suggestionCreated = await SuggestionRepository.createSuggestion(
     manifesto.manifestoId,
-    suggestionStatusEnum,
+    suggestionStatusEnum.OPEN,
     userId
   );
+
+  const { suggestionId } = suggestionCreated;
+  suggestionNotification.suggestionUpdated(spaceId, suggestionId, userId)
 
   return { manifesto, suggestion, suggestionCreated }
 };
