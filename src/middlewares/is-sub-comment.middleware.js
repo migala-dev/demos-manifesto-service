@@ -30,7 +30,7 @@ const isSubComment = async (req, res, next) => {
   }
 
   const numberOfReplies =  await manifestoCommentRepository.getNumberOfReplies(manifestoCommentParentId)
-  const canContinueConversation = numberOfReplies > 0;
+  const canContinueConversation = numberOfReplies > 0 || !manifestoComment.deleted;
   if (!canContinueConversation) {
     return next(new ApiError(httpStatus.BAD_REQUEST, 'Can\'t continue the conversation on this manifesto comment'));
   }
