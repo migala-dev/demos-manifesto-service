@@ -1,12 +1,10 @@
 const httpStatus = require('http-status');
 const { JsonWebTokenError } = require('jsonwebtoken');
 const request = require('supertest');
-
 const app = require('../../src/app');
+const setupTestDB = require('../utils/setupTestDB');
 
-beforeAll(() => {
-  
-});
+setupTestDB();
 
 describe('Proposal routes', () => { 
 

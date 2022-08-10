@@ -8,8 +8,7 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'clover', 'html'],
   moduleNameMapper: {
     'amazon-cognito-identity-js': '<rootDir>/tests/mocks/amazon-cognito-identity-js/index.js',
-    'repositories': '<rootDir>/tests/mocks/repositories/index.js',
-    'notifications': '<rootDir>/tests/mocks/notifications/index.js',
+    'createPgClient': '<rootDir>/tests/mocks/utils/createPgClient.js',
     'authenticate': '<rootDir>/tests/mocks/authenticate.js',
   },
 };

@@ -1,6 +1,8 @@
+const mockDBHelper = require('./mockDBHelper');
+
 const setupTestDB = () => {
   beforeAll(async () => {
-    // await mongoose.connect(config.mongoose.url, config.mongoose.options);
+    mockDBHelper.createDB();
   });
 
   beforeEach(async () => {

@@ -1,11 +1,12 @@
-const authenticate = jest.fn((passport, strategy, options, callback) => async (req, res, next) => {
-  const username = {
-    cognitoId: '1234567890987654321'
-  };
+const { PRIMARY_USER__COGNITO_ID } = require('../utils/constants');
 
-  await callback(null, { username }, null);
+const authenticate = jest.fn((passport, strategy, options, callback) => async (req, res, next) => {
+  const response = {
+    username: PRIMARY_USER__COGNITO_ID,
+  };
+  console.log(response);
+  await callback(null, response, null);
   next();
 });
-
 
 module.exports = authenticate;
