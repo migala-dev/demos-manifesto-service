@@ -3,6 +3,7 @@ const { JsonWebTokenError } = require('jsonwebtoken');
 const request = require('supertest');
 const app = require('../../src/app');
 const setupTestDB = require('../utils/setupTestDB');
+const testConstants = require('../utils/db.constants');
 
 setupTestDB();
 
@@ -17,11 +18,11 @@ describe('Proposal routes', () => {
     };
 
     test('should return 200 and create and publish proposal', async () => {
-      const spaceId = '1234567890987654321';
+      const spaceId = testConstants.REPRESENTATIVE_SPACE_ID;
       const res = await request(app)
         .post(`/v1/proposals/${spaceId}/publish`)
         .set({
-          'Authorization': 'Bearer 1234567890987654321',
+          'Authorization': 'Bearer TEST-TOKEN',
           'Content-Type': 'application/json'
         })
         .send(proposal);

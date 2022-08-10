@@ -174,4 +174,9 @@ CREATE TABLE manifesto_comment_vote (
 );
 
 
-INSERT INTO users(name, phone_number, cognito_id) VALUES('Alex Ortega', '+526626666666', '$PRIMARY_USER__COGNITO_ID');
+INSERT INTO users(user_id, name, phone_number, cognito_id) VALUES('$PRIMARY_USER__USER_ID', 'Alex Ortega', '+526626666666', '$PRIMARY_USER__COGNITO_ID');
+
+INSERT INTO spaces(space_id, name, description, approval_percentage, participation_percentage, owner_id) values('$REPRESENTATIVE_SPACE_ID', 'Test Space', 'This a space for testing', 70, 70, '$PRIMARY_USER__USER_ID');
+
+INSERT INTO members(member_id, space_id, user_id, invitation_status, role, created_by, updated_by) 
+    values ('$REPRESENTATIVE_MEMBER_ID', '$REPRESENTATIVE_SPACE_ID', '$PRIMARY_USER__USER_ID', 2, 'REPRESENTATIVE', '$PRIMARY_USER__USER_ID', '$PRIMARY_USER__USER_ID')

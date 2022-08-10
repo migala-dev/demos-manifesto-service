@@ -1,7 +1,7 @@
 const { newDb } = require('pg-mem');
 const fs = require('fs');
 const { v4 } = require('uuid');
-const testConstants = require('./constants');
+const testConstants = require('./db.constants');
 
 class MockDBHelper {
   constructor() {}
@@ -13,7 +13,6 @@ class MockDBHelper {
     this._registerExtensions();
     this._createTablesAndData();
     this._backup = this._db.backup();
-    console.log('database created');
   }
 
   getClient() {
@@ -26,7 +25,9 @@ class MockDBHelper {
 
   _createTablesAndData() {
     let sqlQuery = fs.readFileSync('./dump.sql', 'utf8');
-    sqlQuery = sqlQuery.replace('$PRIMARY_USER__COGNITO_ID', testConstants.PRIMARY_USER__COGNITO_ID);
+    Object.keys(testConstants).forEach(key => {
+      sqlQuery = sqlQuery.replaceAll(`$${key}`, testConstants[key]);
+    });
     this._db.public.none(sqlQuery);
   }
 
