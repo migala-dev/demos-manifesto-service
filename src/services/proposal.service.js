@@ -61,6 +61,7 @@ const createDraft = async (space, member, proposalDraft) => {
     proposalStatusEnum.DRAFT,
     spaceId,
     userId,
+    proposalDraft.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
@@ -117,6 +118,7 @@ const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => 
     proposal.proposalId,
     proposalStatusEnum.OPEN,
     member.userId,
+    proposal.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
@@ -144,6 +146,7 @@ const updateProposal = async (proposal, member, space, proposalInfo) => {
     proposal.proposalId,
     proposalStatusEnum.OPEN,
     member.userId,
+    proposal.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
@@ -173,6 +176,7 @@ const resetProposalParticipation = async (proposal, member, space) => {
     proposal.proposalId,
     proposalStatusEnum.OPEN,
     member.userId,
+    proposal.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
@@ -241,6 +245,7 @@ const createAndPublishProposal = async (proposal, space, member) => {
     proposalStatusEnum.OPEN,
     spaceId,
     userId,
+    proposal.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
