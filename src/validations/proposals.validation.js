@@ -24,6 +24,7 @@ const createDraft = {
   body: Joi.object().keys({
     title: Joi.string().allow(null, ''),
     content: Joi.string().allow(null, ''),
+    expireOnHours: Joi.number().integer().min(1).max(24),
     optionType: Joi.number().valid(...Object.values(optionTypeEnum)),
     options: Joi.array()
     .items(
@@ -39,6 +40,7 @@ const updateDraft = {
   body: Joi.object().keys({
     title: Joi.string().allow(null, ''),
     content: Joi.string().allow(null, ''),
+    expireOnHours: Joi.number().integer().min(1).max(24),
     optionType: Joi.number().valid(...Object.values(optionTypeEnum)),
     options: Joi.array()
     .items(
@@ -54,6 +56,7 @@ const proposal = {
   body: Joi.object().keys({
     title: Joi.string().required(),
     content: Joi.string().allow(null, ''),
+    expireOnHours: Joi.number().integer().min(1).max(24).required(),
     optionType: Joi.number().valid(...Object.values(optionTypeEnum)),
     options: Joi.array()
     .items(
