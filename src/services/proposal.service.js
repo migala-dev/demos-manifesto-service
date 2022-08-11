@@ -61,6 +61,7 @@ const createDraft = async (space, member, proposalDraft) => {
     proposalStatusEnum.DRAFT,
     spaceId,
     userId,
+    proposalDraft.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
@@ -88,7 +89,16 @@ const updateDraft = async (proposal, member, proposalDraft) => {
     await ManifestoOptionRepository.removeAllMissingOptions(manifestoOptions, manifestoId);
   }
 
-  return { manifesto, manifestoOptions, proposal };
+  const updatedProposal = await ProposalRepository.updateProposal(
+    proposal.proposalId,
+    proposal.status,
+    member.userId,
+    proposalDraft.expireOnHours,
+    proposal.approvalPercentage,
+    proposal.participationPercentage
+  );
+
+  return { manifesto, manifestoOptions, proposal: updatedProposal };
 };
 
 /**
@@ -111,21 +121,14 @@ const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => 
     );
   }
 
+  Object.assign(proposal, { status: proposalStatusEnum.OPEN, approvalPercentage, participationPercentage });
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalDraft);
-
-  const proposalUpdated = await ProposalRepository.updateProposal(
-    proposal.proposalId,
-    proposalStatusEnum.OPEN,
-    member.userId,
-    approvalPercentage,
-    participationPercentage
-  );
 
   const participations = await createProposalParticipations(spaceId, proposalId);
 
   proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
 
-  return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
+  return { manifesto, manifestoOptions, proposal, participations };
 };
 
 /**
@@ -138,15 +141,10 @@ const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => 
  */
 const updateProposal = async (proposal, member, space, proposalInfo) => {
   const { proposalId, spaceId } = proposal;
-  const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalInfo);
   const { approvalPercentage, participationPercentage } = space;
-  const proposalUpdated = await ProposalRepository.updateProposal(
-    proposal.proposalId,
-    proposalStatusEnum.OPEN,
-    member.userId,
-    approvalPercentage,
-    participationPercentage
-  );
+
+  Object.assign(proposal, { approvalPercentage, participationPercentage });
+  const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalInfo);
 
   await ProposalParticipationRepository.deleteByProposalId(proposalId);
   await ProposalVoteRepository.deleteByProposalId(proposalId);
@@ -155,7 +153,7 @@ const updateProposal = async (proposal, member, space, proposalInfo) => {
 
   proposalNotification.proposalUpdated(spaceId, proposalId);
 
-  return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
+  return { manifesto, manifestoOptions, proposal, participations };
 };
 
 /**
@@ -173,6 +171,7 @@ const resetProposalParticipation = async (proposal, member, space) => {
     proposal.proposalId,
     proposalStatusEnum.OPEN,
     member.userId,
+    proposal.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
@@ -241,6 +240,7 @@ const createAndPublishProposal = async (proposal, space, member) => {
     proposalStatusEnum.OPEN,
     spaceId,
     userId,
+    proposal.expireOnHours,
     approvalPercentage,
     participationPercentage
   );
