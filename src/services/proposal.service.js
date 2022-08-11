@@ -143,7 +143,7 @@ const updateProposal = async (proposal, member, space, proposalInfo) => {
   const { proposalId, spaceId } = proposal;
   const { approvalPercentage, participationPercentage } = space;
 
-  Object.assign(proposal, { status: proposalStatusEnum.OPEN, approvalPercentage, participationPercentage });
+  Object.assign(proposal, { approvalPercentage, participationPercentage });
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalInfo);
 
   await ProposalParticipationRepository.deleteByProposalId(proposalId);
