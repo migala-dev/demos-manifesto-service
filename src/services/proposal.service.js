@@ -121,7 +121,7 @@ const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => 
     );
   }
 
-  Object.assign(proposal, { status: proposalStatusEnum.PUBLISHED, approvalPercentage, participationPercentage });
+  Object.assign(proposal, { status: proposalStatusEnum.OPEN, approvalPercentage, participationPercentage });
   const { manifesto, manifestoOptions } = await updateDraft(proposal, member, proposalDraft);
 
   const participations = await createProposalParticipations(spaceId, proposalId);
