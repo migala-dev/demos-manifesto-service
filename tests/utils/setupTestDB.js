@@ -3,6 +3,7 @@ const mockDBHelper = require('./mockDBHelper');
 const setupTestDB = () => {
   beforeAll(async () => {
     mockDBHelper.createDB();
+    await new Promise((res) => setTimeout(() => res()), 1000);
   });
 
   beforeEach(async () => {

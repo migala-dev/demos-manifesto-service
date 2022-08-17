@@ -1,8 +1,7 @@
-const { PRIMARY_USER__COGNITO_ID } = require('../utils/db.constants');
-
 const authenticate = jest.fn((passport, strategy, options, callback) => async (req, res, next) => {
+  
   const response = {
-    username: PRIMARY_USER__COGNITO_ID,
+    username: req.header('authorization'),
   };
   await callback(null, response, null);
   next();
