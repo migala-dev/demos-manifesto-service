@@ -77,5 +77,6 @@ const voteProposal = {
 module.exports = {
     createDraft,
     updateDraft,
+    proposal,
     voteProposal
 };
