@@ -314,6 +314,8 @@ const voteProposal = async (proposal, member, voteInfo) => {
       participation.proposalParticipationId,
       true
     );
+
+    checkIfProposalIsCompleted(proposalId, spaceId);
     proposalNotification.proposalVoteUpdated(spaceId, proposalId, participation.proposalParticipationId, userId);
   }
   return { proposalParticipation: participation };
@@ -333,6 +335,19 @@ const vote = async (participation, voteInfo) => {
     );
   }
 };
+
+const checkIfProposalIsCompleted = async (proposalId, spaceId) => {
+  const participations = await ProposalParticipationRepository.findByProposalId(proposalId);
+
+  if (participations.length === participations.filter(p => p.participated).length) {
+    const proposal = await ProposalRepository.findById(proposalId);
+    if (!proposal.isCompleted) {
+      await ProposalRepository.markProposalAsCompleted(proposalId);
+      proposalNotification.proposalUpdated(spaceId, proposalId);
+    } 
+  }
+      
+}
 
 const updateVote = async (voteInfo) => {
   const { inFavor, manifestoOptionId, userHash, nullVoteComment } = voteInfo;
