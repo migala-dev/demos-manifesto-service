@@ -36,6 +36,7 @@ const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
 const ProposalParticipation = require('../shared/models/proposal-participation.model');
 const logger = require('../shared/config/logger');
 const Space = require('../shared/models/space.model');
+const proposalNotification = require('../shared/notifications/proposals.notification');
 
 const canCreateOptions = (optionType, options) =>
   optionType === optionTypeEnum.MULTIPLE_OPTIONS && !!options && options.length > 0;
