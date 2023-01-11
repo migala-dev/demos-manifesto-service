@@ -82,10 +82,10 @@ const cancelProposal = catchAsync(async (req, res) => {
 });
 
 const voteProposal = catchAsync(async (req, res) => {
-  const { proposal, member } = req;
+  const { proposal, member, space } = req;
   const voteInfo = req.body;
 
-  const result = await proposalService.voteProposal(proposal, member, voteInfo);
+  const result = await proposalService.voteProposal(proposal, member, voteInfo, space);
 
   res.send(result);
 });

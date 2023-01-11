@@ -36,6 +36,8 @@ const envVarsSchema = Joi.object()
     PGDATABASE: Joi.string().required().description('PostgresSQL - Database'),
     PGPORT: Joi.string().required().description('PostgresSQL - Port'),
     WEB_SOCKET_URL: Joi.string().required().description('Web Socket - Url'),
+    WEB_SOCKET_URL: Joi.string().required().description('Web Socket - Url'),
+    TELEGRAM_TOKEN: Joi.string().required().description('Telegram - Token'),
   })
   .unknown();
 
@@ -63,4 +65,7 @@ module.exports = {
     database: envVars.PGDATABASE,
     port: envVars.PGPORT,
   },
+  telegram: {
+    token: envVars.TELEGRAM_TOKEN
+  }
 };

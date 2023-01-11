@@ -19,17 +19,20 @@
 
 const httpStatus = require('http-status');
 const ApiError = require('../shared/utils/ApiError');
-const ProposalRepository = require('../shared/repositories/proposal.repository');
-const ManifestoRepository = require('../shared/repositories/manifesto.repository');
-const ManifestoOptionRepository = require('../shared/repositories/manifesto-option.repository');
-const ProposalParticipationRepository = require('../shared/repositories/proposal-participation.repository');
-const MemberRepository = require('../shared/repositories/member.repository');
-const ProposalVoteRepository = require('../shared/repositories/proposal-vote.repository');
+const {
+  UserDeviceRepository,
+  ProposalRepository,
+  ManifestoRepository,
+  ManifestoOptionRepository,
+  ProposalParticipationRepository,
+  MemberRepository,
+  ProposalVoteRepository,
+  SpaceRepository
+} = require('../shared/repositories');
 const Manifesto = require('../shared/models/manifesto.model');
-const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
 const ManifestoOption = require('../shared/models/manifesto-option.model');
 const Proposal = require('../shared/models/proposal.model');
-const proposalNotification = require('../shared/notifications/proposals.notification');
+const { optionTypeEnum, proposalStatusEnum } = require('../shared/enums');
 const ProposalParticipation = require('../shared/models/proposal-participation.model');
 const logger = require('../shared/config/logger');
 const Space = require('../shared/models/space.model');
@@ -125,6 +128,10 @@ const updateAndPublishDraft = async (proposal, member, space, proposalDraft) => 
 
   proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
 
+  if (space.telegramChatId) {
+    bot.sendMessage(space.telegramChatId, `Nueva propuesta: "${manifesto.title}" publicada.`);
+  }
+  
   return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
 };
 
@@ -155,6 +162,10 @@ const updateProposal = async (proposal, member, space, proposalInfo) => {
 
   proposalNotification.proposalUpdated(spaceId, proposalId);
 
+  if (space.telegramChatId) {
+    bot.sendMessage(space.telegramChatId, `La propuesta "${manifesto.title}" ha sido actualizada, los votos recibidos dentro de esta propuesta fueron reiniciados.`);
+  }
+  
   return { manifesto, manifestoOptions, proposal: proposalUpdated, participations };
 };
 
@@ -182,6 +193,10 @@ const resetProposalParticipation = async (proposal, member, space) => {
 
   const participations = await createProposalParticipations(spaceId, proposalId);
 
+  if (space.telegramChatId) {
+    const manifesto = await ManifestoRepository.findById(proposal.manifestoId);
+    bot.sendMessage(space.telegramChatId, `Los votos recibidos dentro de la propuesta "${manifesto.title}" fueron reiniciados.`);
+  }
   proposalNotification.proposalUpdated(spaceId, proposalId, member.userId);
 
   return { participations, proposal: proposalUpdated };
@@ -247,6 +262,9 @@ const createAndPublishProposal = async (proposal, space, member) => {
 
   const participations = await createProposalParticipations(spaceId, proposalCreated.proposalId);
 
+  if (space.telegramChatId) {
+    bot.sendMessage(space.telegramChatId, `Nueva propuesta: "${manifesto.title}" publicada.`);
+  }
   proposalNotification.proposalUpdated(spaceId, proposalCreated.proposalId, userId);
 
   return { manifesto, manifestoOptions, proposal: proposalCreated, participations };
@@ -300,7 +318,7 @@ const deleteDraft = async (proposal, member) => {
  * @param {Object} voteInfo
  * @returns {Promise<{ proposalParticipation: ProposalParticipation }}>}
  */
-const voteProposal = async (proposal, member, voteInfo) => {
+const voteProposal = async (proposal, member, voteInfo, space) => {
   const { proposalId, spaceId } = proposal;
   const { userId } = member;
 
@@ -315,7 +333,7 @@ const voteProposal = async (proposal, member, voteInfo) => {
       true
     );
 
-    checkIfProposalIsCompleted(proposalId, spaceId);
+    checkIfProposalIsCompleted(proposal, space);
     proposalNotification.proposalVoteUpdated(spaceId, proposalId, participation.proposalParticipationId, userId);
   }
   return { proposalParticipation: participation };
@@ -336,14 +354,17 @@ const vote = async (participation, voteInfo) => {
   }
 };
 
-const checkIfProposalIsCompleted = async (proposalId, spaceId) => {
-  const participations = await ProposalParticipationRepository.findByProposalId(proposalId);
+const checkIfProposalIsCompleted = async (proposal, space) => {
+  const participations = await ProposalParticipationRepository.findByProposalId(proposal.proposalId);
 
   if (participations.length === participations.filter(p => p.participated).length) {
-    const proposal = await ProposalRepository.findById(proposalId);
     if (!proposal.isCompleted) {
-      await ProposalRepository.markProposalAsCompleted(proposalId);
-      proposalNotification.proposalUpdated(spaceId, proposalId);
+      await ProposalRepository.markProposalAsCompleted(proposal.proposalId);
+      if (space.telegramChatId) {
+        const manifesto = await ManifestoRepository.findById(proposal.manifestoId);
+        bot.sendMessage(space.telegramChatId, `Se han recibido todos los votos para la propuesta "${manifesto.title}", por lo que se cerrara en 10 minutos.`);
+      }
+      proposalNotification.proposalUpdated(space.spaceId, proposal.proposalId);
     } 
   }
       
@@ -384,18 +405,22 @@ const checkProposalsExpirationDate = async () => {
     const expirationDate = new Date(proposal.expiredAt);
     if (expirationDate < now) {
       logger.info(`Closing proposal: ${proposal.proposalId}`);
-      const { participationPercentage, approvalPercentage} = proposal;
-      const { optionType } = await ManifestoRepository.findById(proposal.manifestoId);
+      const { participationPercentage, approvalPercentage } = proposal;
+      const { optionType, title } = await ManifestoRepository.findById(proposal.manifestoId);
       const participation = await ProposalParticipationRepository.findByProposalId(proposal.proposalId);
 
       const porcentageRequired =
-          optionType === optionTypeEnum.IN_FAVOR_OR_OPPOSSING
-              ? approvalPercentage
-              : participationPercentage;
-      const requiredVotes = Math.ceil(participation.length * porcentageRequired / 100);
-      const insufficientVotes = (participation.filter(p => p.participated).length) < requiredVotes;
+        optionType === optionTypeEnum.IN_FAVOR_OR_OPPOSSING ? approvalPercentage : participationPercentage;
+      const requiredVotes = Math.ceil((participation.length * porcentageRequired) / 100);
+      const insufficientVotes = participation.filter((p) => p.participated).length < requiredVotes;
 
       await ProposalRepository.updateProposalStatus(proposal.proposalId, proposalStatusEnum.CLOSED, insufficientVotes, null);
+
+      const space = await SpaceRepository.findById(proposal.spaceId);
+      if (space.telegramChatId) {
+        bot.sendMessage(space.telegramChatId, `La propuesta "${title}" se ha cerrado, para ver los resultados entra a demos.`);
+      }
+
       proposalNotification.proposalUpdated(proposal.spaceId, proposal.proposalId);
     }
   }
@@ -404,6 +429,28 @@ const checkProposalsExpirationDate = async () => {
 // Every 3 minutes
 const intervalTime = 3 * 60 * 1000;
 setInterval(() => checkProposalsExpirationDate(), intervalTime);
+
+
+// TELEGRAM BOT
+const TelegramBot = require('node-telegram-bot-api');
+const config = require('../config/config');
+const token = config.telegram.token;
+
+const bot = new TelegramBot(token, {polling: true});
+
+bot.onText(/\/demosLinkSpaceId (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const spaceId = match[1];
+
+  const space = await SpaceRepository.findById(spaceId);
+  if (!!space) {
+    await SpaceRepository.saveChatId(spaceId, chatId);
+    bot.sendMessage(chatId, `El espacio "${space.name}" ha sido relacionado a este grupo, 
+    ahora recibirás notificaciones de las actividades que se realicen dentro de tu espacio de trabajo en demos.`);
+  } else {
+    bot.sendMessage(chatId, `El ID del espacio es inválido: ${spaceId}`);
+  }
+});
 
 module.exports = {
   createDraft,
